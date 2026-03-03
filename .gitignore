@@ -1,0 +1,16 @@
+# venv
+venv/
+.venv/
+
+# secrets
+.env
+.flaskenv
+
+# python cache
+__pycache__/
+*.py[cod]
+.__pycache__/
+
+# IDE
+.vscode/
+.idea/
