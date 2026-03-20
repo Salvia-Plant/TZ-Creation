@@ -4,11 +4,12 @@ from marshmallow import ValidationError
 
 from app import db
 from app.database.models import TechnicalTask
-from app.database.schemas import TechnicalTaskInSchema, TechnicalTaskOutSchema
+from app.database.schemas import TechnicalTaskInSchema, TechnicalTaskOutSchema, TechnicalTaskStatusSchema
 
 task_in_schema = TechnicalTaskInSchema()
 task_out_schema = TechnicalTaskOutSchema()
 tasks_out_schema = TechnicalTaskOutSchema(many=True)
+status_schema = TechnicalTaskStatusSchema() 
 
 class TaskOne(MethodView):
     model = TechnicalTask
@@ -20,7 +21,7 @@ class TaskOne(MethodView):
     
     def post(self):
         data = request.get_json() # читает данные из конекста запроса
-        if not data:
+        if data is None:
             return jsonify({"error": "JSON необхлдим"}), 400
         try:
             val_data = task_in_schema.load(data) # валидирует данные от клиента (десериализация)
@@ -34,3 +35,64 @@ class TaskOne(MethodView):
 
         result = task_out_schema.dump(task) # сериализовал объект в JSON
         return jsonify(result), 201
+    
+# кортеж с фиксированными статусами
+STATUSES = (
+    "INITIALIZED",
+    "PLAN_CREATED",
+    "APPROVED",
+    "DONE",
+)
+#  с фиксированными переходами между статусами
+ALLOWED_STATUS_TRANSITIONS = {
+    "INITIALIZED": {"PLAN_CREATED"},
+    "PLAN_CREATED": {"APPROVED"},
+    "APPROVED": {"DONE"},
+    "DONE": set(),
+}
+
+# функция смены статусов
+def can_change_status(current_status, new_status):
+    return new_status in ALLOWED_STATUS_TRANSITIONS.get(current_status, set())
+
+class TaskStatus(MethodView): 
+    """статус исполнения тз (машина состояний). редактируется в этом сервисе сразу в таблице"""
+    model = TechnicalTask 
+
+    def post(self, task_id):
+        data = request.get_json()
+        if data is None:
+            return jsonify({"error":"JSON необходим"}), 400
+        try:
+            val_data = status_schema.load(data)
+        except ValidationError as err:
+            return jsonify(err.messages), 400
+        task = self.model.query.get(task_id)
+        if task is None:
+            return jsonify({"error": "ТЗ не найдено"}), 404
+
+        new_status = val_data["status"]
+        current_status = task.status
+
+        if new_status not in STATUSES:
+            return jsonify({
+                "error": "Недопустимый статус",
+                "allowed_statuses": list(STATUSES)
+            }), 400
+
+        if not can_change_status(current_status, new_status):
+            return jsonify({
+                "error": "Недопустимый переход статуса",
+                "current_status": current_status,
+                "new_status": new_status
+            }), 400
+
+        task.status = new_status
+        db.session.commit()
+
+        result = task_out_schema.dump(task)
+        return jsonify(result), 200
+
+
+class TaskRegenerate(MethodView):
+    model = TechnicalTask
