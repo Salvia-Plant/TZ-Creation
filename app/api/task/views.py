@@ -43,17 +43,17 @@ STATUSES = (
     "APPROVED",
     "DONE",
 )
-#  с фиксированными переходами между статусами
-ALLOWED_STATUS_TRANSITIONS = {
+# словарь с фиксированными переходами между статусами (значения - множества)
+STATUS_TRANSITIONS = {
     "INITIALIZED": {"PLAN_CREATED"},
     "PLAN_CREATED": {"APPROVED"},
     "APPROVED": {"DONE"},
-    "DONE": set(),
+    "DONE": set(), # пустое множество, переходов нет, конечный статус
 }
 
-# функция смены статусов
-def can_change_status(current_status, new_status):
-    return new_status in ALLOWED_STATUS_TRANSITIONS.get(current_status, set())
+# входит ли новый статус в множество разрешённых переходов для текущего статуса
+def change_status(current_status, new_status):
+    return new_status in STATUS_TRANSITIONS.get(current_status, set())
 
 class TaskStatus(MethodView): 
     """статус исполнения тз (машина состояний). редактируется в этом сервисе сразу в таблице"""
@@ -80,7 +80,7 @@ class TaskStatus(MethodView):
                 "allowed_statuses": list(STATUSES)
             }), 400
 
-        if not can_change_status(current_status, new_status):
+        if not change_status(current_status, new_status):
             return jsonify({
                 "error": "Недопустимый переход статуса",
                 "current_status": current_status,
