@@ -2,11 +2,11 @@
 venv/
 .venv/
 
-# secrets
+# секреты
 .env
 .flaskenv
 
-# python cache
+# кэш
 __pycache__/
 *.py[cod]
 .__pycache__/

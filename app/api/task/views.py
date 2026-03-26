@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from flask.views import MethodView
-from marshmallow import ValidationError
+from marshmallow import ValidationError, EXCLUDE
 
 from app import db
 from app.database.models import TechnicalTask
@@ -51,7 +51,7 @@ STATUS_TRANSITIONS = {
     "DONE": set(), # пустое множество, переходов нет, конечный статус
 }
 
-# входит ли новый статус в множество разрешённых переходов для текущего статуса
+# входит ли новый статус в множество разрешённых переходов для текущего статуса (булевое)
 def change_status(current_status, new_status):
     return new_status in STATUS_TRANSITIONS.get(current_status, set())
 
@@ -59,7 +59,7 @@ class TaskStatus(MethodView):
     """статус исполнения тз (машина состояний). редактируется в этом сервисе сразу в таблице"""
     model = TechnicalTask 
 
-    def post(self, task_id):
+    def post(self, task_id): #task_id идентификатор ТЗ, фласк его берёт из адреса запроса.
         data = request.get_json()
         if data is None:
             return jsonify({"error":"JSON необходим"}), 400
@@ -67,30 +67,30 @@ class TaskStatus(MethodView):
             val_data = status_schema.load(data)
         except ValidationError as err:
             return jsonify(err.messages), 400
-        task = self.model.query.get(task_id)
+        task = self.model.query.get(task_id) #локал переменная, в которой орм объект конкрет ТЗ.
         if task is None:
-            return jsonify({"error": "ТЗ не найдено"}), 404
+            return jsonify({"error": "ТЗ не найдено"}), 404 #если нет такого id
 
-        new_status = val_data["status"]
-        current_status = task.status
+        new_status = val_data["status"] #берём новое значения статуса из присланных данных
+        current_status = task.status #берём текущее значение статуса из таблицы
 
         if new_status not in STATUSES:
             return jsonify({
                 "error": "Недопустимый статус",
                 "allowed_statuses": list(STATUSES)
-            }), 400
+            }), 400 #если нет такого статуса
 
         if not change_status(current_status, new_status):
             return jsonify({
                 "error": "Недопустимый переход статуса",
                 "current_status": current_status,
                 "new_status": new_status
-            }), 400
+            }), 400  # нельзя из текущего состояния перейти в указанный статус
 
-        task.status = new_status
+        task.status = new_status #присваиваем новое значение орм объекту
         db.session.commit()
 
-        result = task_out_schema.dump(task)
+        result = task_out_schema.dump(task) #сериализуем
         return jsonify(result), 200
 
 
