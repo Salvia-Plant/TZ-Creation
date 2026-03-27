@@ -17,5 +17,5 @@ class TechnicalTaskOutSchema(Schema): #для сериализации, обра
     title = fields.Str()
     status = fields.Str()
 
-class TechnicalTaskStatusSchema(Schema):
+class StatusSchema(Schema):
     status = fields.Str(required=True) # поле статуса обязательное

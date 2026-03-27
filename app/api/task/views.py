@@ -4,12 +4,12 @@ from marshmallow import ValidationError, EXCLUDE
 
 from app import db
 from app.database.models import TechnicalTask
-from app.database.schemas import TechnicalTaskInSchema, TechnicalTaskOutSchema, TechnicalTaskStatusSchema
+from app.database.schemas import TechnicalTaskInSchema, TechnicalTaskOutSchema, StatusSchema
 
 task_in_schema = TechnicalTaskInSchema()
 task_out_schema = TechnicalTaskOutSchema()
 tasks_out_schema = TechnicalTaskOutSchema(many=True)
-status_schema = TechnicalTaskStatusSchema() 
+status_schema = StatusSchema() 
 
 class TaskOne(MethodView):
     model = TechnicalTask
@@ -90,7 +90,7 @@ class TaskStatus(MethodView):
         task.status = new_status #присваиваем новое значение орм объекту
         db.session.commit()
 
-        result = task_out_schema.dump(task) #сериализуем
+        result = task_out_schema.dump(task) #сериализуем 
         return jsonify(result), 200
 
 
