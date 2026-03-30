@@ -29,6 +29,7 @@ class TaskOne(MethodView):
             return jsonify(err.messages), 400
         
         task = self.model(**val_data) # создал ORM-объект
+        task.status = "INITIALIZED" #фиксированный статус при создании новго тз
 
         db.session.add(task) # записал строку в PostgreSQL
         db.session.commit()

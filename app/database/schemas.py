@@ -10,7 +10,6 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 class TechnicalTaskInSchema(Schema): #для десериализации, обработка POST запроса
     title = fields.Str(required=True) #что клиент имеет право присылать
-    status = fields.Str(required=True)
 
 class TechnicalTaskOutSchema(Schema): #для сериализации, обработка GET запроса
     id = fields.UUID(dump_only=True) # что клиент увидит в ответе?
