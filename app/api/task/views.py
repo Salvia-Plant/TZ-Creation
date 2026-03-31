@@ -15,7 +15,7 @@ class TaskOne(MethodView):
     model = TechnicalTask
     
     def get(self):
-        items = self.model.query.all()
+        items = self.model.query.filter(self.model.deletion_mark.is_(False)).all()
         result = tasks_out_schema.dump(items)
         return jsonify(result) #возвращает записи из модели в форме джейсон (сериализация)
     
@@ -37,6 +37,19 @@ class TaskOne(MethodView):
         result = task_out_schema.dump(task) # сериализовал объект в JSON
         return jsonify(result), 201
     
+class TaskDelete(MethodView):
+    model = TechnicalTask
+
+    def post(self, task_id):
+        task = self.model.query.get(task_id)
+        if task is None:
+            return jsonify({"error":"ТЗ не найдено"}), 404
+        
+        task.deletion_mark = True
+        db.session.commit()
+        
+        return jsonify({"message":"ТЗ успешно удалено"}), 200
+
 # кортеж с фиксированными статусами
 STATUSES = (
     "INITIALIZED",
