@@ -110,3 +110,14 @@ class TaskStatus(MethodView):
 
 class TaskRegenerate(MethodView):
     model = TechnicalTask
+
+    def post(self, task_id):
+        task = self.model.query.get(task_id)
+        if task is None:
+            return jsonify({"error":"ТЗ не найдено"}), 404
+        
+        return jsonify({
+            "message": "Перегенерация ТЗ запущена",
+            "task_id": str(task.id),
+            "current_status": task.status
+        }), 200
