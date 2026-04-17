@@ -11,16 +11,17 @@ task_out_schema = TechnicalTaskOutSchema()
 tasks_out_schema = TechnicalTaskOutSchema(many=True)
 status_schema = StatusSchema() 
 
-class TaskOne(MethodView):
+class TaskList(MethodView):
     model = TechnicalTask
-    
+ #класс с базовым гет запросом который отображает все записи в БД (которые не удалены)  
+
     def get(self):
         items = self.model.query.filter(self.model.deletion_mark.is_(False)).all()
         result = tasks_out_schema.dump(items)
         return jsonify(result) #возвращает записи из модели в форме джейсон (сериализация)
-    
+ # а также базовый пост запрос на создание нового тз, от клиента принимаем только тайтл и валидируем
     def post(self):
-        data = request.get_json() # читает данные из конекста запроса
+        data = request.get_json() # читает данные из запроса
         if data is None:
             return jsonify({"error": "JSON необхлдим"}), 400
         try:
@@ -39,7 +40,7 @@ class TaskOne(MethodView):
     
 class TaskDelete(MethodView):
     model = TechnicalTask
-
+#если ты заметил, у моего наставника мягкое удаление поэтому я тоже такое реализовала уже
     def post(self, task_id):
         task = self.model.query.get(task_id)
         if task is None:
@@ -51,6 +52,8 @@ class TaskDelete(MethodView):
         return jsonify({"message":"ТЗ успешно удалено"}), 200
 
 # кортеж с фиксированными статусами
+# вот его и словарь с переходом вероятно надо как-то оформить в отдельном классе в "справочниках", то что мы обсуждали ранее.
+# мне кстати руководительница так и сказала что фиксированное всё в справочники оформляем
 STATUSES = (
     "INITIALIZED",
     "PLAN_CREATED",
@@ -72,7 +75,7 @@ def change_status(current_status, new_status):
 class TaskStatus(MethodView): 
     """статус исполнения тз (машина состояний). редактируется в этом сервисе сразу в таблице"""
     model = TechnicalTask 
-
+# входит ли новый статус в множество разрешённых переходов для текущего статуса (булевое)
     def post(self, task_id): #task_id идентификатор ТЗ, фласк его берёт из адреса запроса.
         data = request.get_json()
         if data is None:
@@ -99,18 +102,19 @@ class TaskStatus(MethodView):
                 "error": "Недопустимый переход статуса",
                 "current_status": current_status,
                 "new_status": new_status
-            }), 400  # нельзя из текущего состояния перейти в указанный статус
+            }), 400  #нельзя из текущего состояния перейти в указанный статус
 
         task.status = new_status #присваиваем новое значение орм объекту
         db.session.commit()
-
+        
         result = task_out_schema.dump(task) #сериализуем 
         return jsonify(result), 200
 
 
 class TaskRegenerate(MethodView):
     model = TechnicalTask
-
+#это пока что временная бессмысленная "загушка", не полноценный процесс перегенерации естественно
+#вероятно надо будет перегенерацию в отдельный модуль выносить
     def post(self, task_id):
         task = self.model.query.get(task_id)
         if task is None:
