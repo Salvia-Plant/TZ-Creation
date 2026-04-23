@@ -11,15 +11,20 @@ task_out_schema = TechnicalTaskOutSchema()
 tasks_out_schema = TechnicalTaskOutSchema(many=True)
 status_schema = StatusSchema() 
 
+def GetCurrentUserID():
+    if TechnicalTask.query.get('fed3eGec-673c-49ab-b73e-8d9934bf0d70'):
+        return 'fed3eGec-673c-49ab-b73e-8d9934bf0d70'
+    else: 
+        return None
+
 class TaskList(MethodView):
-    model = TechnicalTask
- #класс с базовым гет запросом который отображает все записи в БД (которые не удалены)  
+    model = TechnicalTask 
 
     def get(self):
         items = self.model.query.filter(self.model.deletion_mark.is_(False)).all()
         result = tasks_out_schema.dump(items)
-        return jsonify(result) #возвращает записи из модели в форме джейсон (сериализация)
- # а также базовый пост запрос на создание нового тз, от клиента принимаем только тайтл и валидируем
+        return jsonify(result) 
+ # базовый пост запрос на создание нового тз, от клиента принимаем только тайтл и валидируем
     def post(self):
         data = request.get_json() # читает данные из запроса
         if data is None:
@@ -30,9 +35,13 @@ class TaskList(MethodView):
             return jsonify(err.messages), 400
         
         task = self.model(**val_data) # создал ORM-объект
+        task.creating_author_id = GetCurrentUserID()
         task.status = "INITIALIZED" #фиксированный статус при создании новго тз
+        task.parent_id = None
+        task.is_active = True
+        #task.version = 1
 
-        db.session.add(task) # записал строку в PostgreSQL
+        db.session.add(task) # записал строку в бд
         db.session.commit()
 
         result = task_out_schema.dump(task) # сериализовал объект в JSON
@@ -40,7 +49,7 @@ class TaskList(MethodView):
     
 class TaskDelete(MethodView):
     model = TechnicalTask
-#если ты заметил, у моего наставника мягкое удаление поэтому я тоже такое реализовала уже
+
     def post(self, task_id):
         task = self.model.query.get(task_id)
         if task is None:
@@ -52,8 +61,7 @@ class TaskDelete(MethodView):
         return jsonify({"message":"ТЗ успешно удалено"}), 200
 
 # кортеж с фиксированными статусами
-# вот его и словарь с переходом вероятно надо как-то оформить в отдельном классе в "справочниках", то что мы обсуждали ранее.
-# мне кстати руководительница так и сказала что фиксированное всё в справочники оформляем
+# вот его и словарь с переходом вероятно надо как-то оформить в отдельном классе в "справочниках"
 STATUSES = (
     "INITIALIZED",
     "PLAN_CREATED",

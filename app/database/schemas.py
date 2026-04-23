@@ -12,9 +12,14 @@ class TechnicalTaskInSchema(Schema): #для десериализации, об�
     title = fields.Str(required=True) #что клиент имеет право присылать
 
 class TechnicalTaskOutSchema(Schema): #для сериализации, обработка GET запроса
-    id = fields.UUID(dump_only=True) # что клиент увидит в ответе?
+    id = fields.UUID(dump_only=True) 
+    parent_id = fields.UUID()
+    creating_author_id = fields.UUID()
+    created_at = fields.DateTime()
     title = fields.Str()
     status = fields.Str()
+    is_active = fields.Boolean()
+    deletion_mark = fields.Boolean()
 
 class StatusSchema(Schema):
     status = fields.Str(required=True) # поле статуса обязательное
