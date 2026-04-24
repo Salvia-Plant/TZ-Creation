@@ -13,8 +13,8 @@ class TechnicalTaskInSchema(Schema): #для десериализации, об�
 
 class TechnicalTaskOutSchema(Schema): #для сериализации, обработка GET запроса
     id = fields.UUID(dump_only=True) 
-    parent_id = fields.UUID()
-    creating_author_id = fields.UUID()
+    parent_id = fields.UUID(allow_none = True)
+    creating_author_id = fields.UUID(allow_none=True)
     created_at = fields.DateTime()
     title = fields.Str()
     status = fields.Str()

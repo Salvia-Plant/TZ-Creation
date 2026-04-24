@@ -83,8 +83,8 @@ def change_status(current_status, new_status):
 class TaskStatus(MethodView): 
     """статус исполнения тз (машина состояний). редактируется в этом сервисе сразу в таблице"""
     model = TechnicalTask 
-# входит ли новый статус в множество разрешённых переходов для текущего статуса (булевое)
-    def post(self, task_id): #task_id идентификатор ТЗ, фласк его берёт из адреса запроса.
+
+    def put(self, task_id): #task_id идентификатор ТЗ, фласк его берёт из адреса запроса.
         data = request.get_json()
         if data is None:
             return jsonify({"error":"JSON необходим"}), 400
