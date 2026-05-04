@@ -1,6 +1,7 @@
 from flask import jsonify, request
 from flask.views import MethodView
 from marshmallow import ValidationError, EXCLUDE
+import uuid
 
 from app import db
 from app.database.models import TechnicalTask
@@ -11,11 +12,14 @@ task_out_schema = TechnicalTaskOutSchema()
 tasks_out_schema = TechnicalTaskOutSchema(many=True)
 status_schema = StatusSchema() 
 
+#def GetCurrentUserID():
+#    if PersonInfo.query.get('fed3egec-673c-49ab-b73e-8d9934bf0d70'):
+#        return 'fed3egec-673c-49ab-b73e-8d9934bf0d70'
+#    else: 
+#        return None  # это когда появится таблица 
+    
 def GetCurrentUserID():
-    if TechnicalTask.query.get('fed3eGec-673c-49ab-b73e-8d9934bf0d70'):
-        return 'fed3eGec-673c-49ab-b73e-8d9934bf0d70'
-    else: 
-        return None
+    return uuid.UUID('fed3e0ec-673c-49ab-b73e-8d9934bf0d70')
 
 class TaskList(MethodView):
     model = TechnicalTask 
