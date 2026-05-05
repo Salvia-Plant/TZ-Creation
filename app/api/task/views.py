@@ -25,8 +25,7 @@ class TaskList(MethodView):
     model = TechnicalTask 
 
     def get(self):
-        items = self.model.query.filter(self.model.deletion_mark.is_(False)).all()
-        result = tasks_out_schema.dump(items)
+        result = tasks_out_schema.dump(self.model.query.filter(self.model.deletion_mark.is_(False)).all())
         return jsonify(result) 
  # базовый пост запрос на создание нового тз, от клиента принимаем только тайтл и валидируем
     def post(self):
@@ -48,8 +47,7 @@ class TaskList(MethodView):
         db.session.add(task) # записал строку в бд
         db.session.commit()
 
-        result = task_out_schema.dump(task) # сериализовал объект в JSON
-        return jsonify(result), 201
+        return jsonify(task_out_schema.dump(task)), 201
     
 class TaskDelete(MethodView):
     model = TechnicalTask
@@ -119,8 +117,7 @@ class TaskStatus(MethodView):
         task.status = new_status #присваиваем новое значение орм объекту
         db.session.commit()
         
-        result = task_out_schema.dump(task) #сериализуем 
-        return jsonify(result), 200
+        return jsonify(task_out_schema.dump(task)), 200
 
 
 class TaskRegenerate(MethodView):

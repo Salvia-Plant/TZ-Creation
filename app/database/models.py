@@ -12,7 +12,6 @@ class TechnicalTask(db.Model):
     parent_id = db.Column(UUID(as_uuid=True),nullable=True, doc='id родителя') # ссылка на предыдущую версию
     creating_author_id = db.Column(UUID(as_uuid=True),nullable=True, doc='id автора записи')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now, doc='Дата создания записи')
-    #version = db.Column(db.Integer, nullable=False, default=1, doc='Версия ТЗ') # для версий
     title = db.Column(db.String(255), nullable=False, doc="Название ТЗ")
     status = db.Column(db.String(32), nullable=False, default="INITIALIZED") 
     is_active = db.Column(db.Boolean, nullable = False, default = True, doc = "флаг активной записи") #для текущей версии
