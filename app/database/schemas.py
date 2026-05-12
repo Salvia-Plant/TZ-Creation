@@ -10,11 +10,13 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 class TechnicalTaskInSchema(Schema): #для десериализации, обработка POST запроса
     title = fields.Str(required=True) #что клиент имеет право присылать
+    fault_detected_at = fields.DateTime()
 
 class TechnicalTaskOutSchema(Schema): #для сериализации, обработка GET запроса
     id = fields.UUID(dump_only=True) 
     parent_id = fields.UUID(allow_none = True)
     creating_author_id = fields.UUID(allow_none=True)
+    fault_detected_at = fields.DateTime()
     created_at = fields.DateTime()
     title = fields.Str()
     status = fields.Str()

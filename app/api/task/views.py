@@ -16,7 +16,7 @@ status_schema = StatusSchema()
 #    if PersonInfo.query.get('fed3egec-673c-49ab-b73e-8d9934bf0d70'):
 #        return 'fed3egec-673c-49ab-b73e-8d9934bf0d70'
 #    else: 
-#        return None  # это когда появится таблица 
+#        return None  #это когда появится таблица 
     
 def GetCurrentUserID():
     return uuid.UUID('fed3e0ec-673c-49ab-b73e-8d9934bf0d70')
@@ -27,7 +27,7 @@ class TaskList(MethodView):
     def get(self):
         result = tasks_out_schema.dump(self.model.query.filter(self.model.deletion_mark.is_(False)).all())
         return jsonify(result) 
- # базовый пост запрос на создание нового тз, от клиента принимаем только тайтл и валидируем
+ #базовый пост запрос на создание нового тз, от клиента принимаем только тайтл и валидируем
     def post(self):
         data = request.get_json() # читает данные из запроса
         if data is None:
@@ -48,6 +48,16 @@ class TaskList(MethodView):
         db.session.commit()
 
         return jsonify(task_out_schema.dump(task)), 201
+    
+class TaskOne(MethodView):
+    model = TechnicalTask
+    schema = task_out_schema
+
+    def get(self, task_id):
+        task = self.model.query.get(task_id)
+        if not task or task.deletion_mark:
+            return jsonify({"error":"ТЗ не найдено"}), 404
+        return jsonify({'TechnicalTask': self.schema.dump(task)})
     
 class TaskDelete(MethodView):
     model = TechnicalTask
