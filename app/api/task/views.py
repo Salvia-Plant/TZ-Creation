@@ -73,7 +73,6 @@ class TaskDelete(MethodView):
         return jsonify({"message":"ТЗ успешно удалено"}), 200
 
 # кортеж с фиксированными статусами
-# вот его и словарь с переходом вероятно надо как-то оформить в отдельном классе в "справочниках"
 STATUSES = (
     "INITIALIZED",
     "PLAN_CREATED",
