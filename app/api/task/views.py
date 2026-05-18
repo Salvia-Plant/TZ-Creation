@@ -81,10 +81,10 @@ STATUSES = (
 )
 # словарь с фиксированными переходами между статусами (значения - множества)
 STATUS_TRANSITIONS = {
-    "INITIALIZED": {"PLAN_CREATED"},
-    "PLAN_CREATED": {"APPROVED"},
-    "APPROVED": {"DONE"},
-    "DONE": set(), # пустое множество, переходов нет, конечный статус
+    "INITIALIZED": {"PLAN_CREATED","APPROVED","DONE"},
+    "PLAN_CREATED": {"PLAN_CREATED","APPROVED","DONE"},
+    "APPROVED": {"PLAN_CREATED","APPROVED","DONE"},
+    "DONE": {"INITIALIZED", "PLAN_CREATED", "APPROVED"}, 
 }
 
 # входит ли новый статус в множество разрешённых переходов для текущего статуса (булевое)
