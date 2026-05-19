@@ -82,8 +82,8 @@ STATUSES = (
 # словарь с фиксированными переходами между статусами (значения - множества)
 STATUS_TRANSITIONS = {
     "INITIALIZED": {"PLAN_CREATED","APPROVED","DONE"},
-    "PLAN_CREATED": {"PLAN_CREATED","APPROVED","DONE"},
-    "APPROVED": {"PLAN_CREATED","APPROVED","DONE"},
+    "PLAN_CREATED": {"INITIALIZED","APPROVED","DONE"},
+    "APPROVED": {"INITIALIZED","PLAN_CREATED","DONE"},
     "DONE": {"INITIALIZED", "PLAN_CREATED", "APPROVED"}, 
 }
 

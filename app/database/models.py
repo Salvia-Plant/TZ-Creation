@@ -24,12 +24,12 @@ class Organization(db.Model):
 
     __tablename__ = "organization"
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(UUID(as_uuid=True), primary_key=True)
     parent_id = db.Column(UUID(as_uuid=True), doc="id родителя")
     org_type = db.Column(db.String(255), nullable = True, doc = 'Тип организации (Изготовитель или ЭксплуатирующаяОрганизация)')
     org_title = db.Column(db.String(255), nullable=False, doc="Наименование организации")
-    children = db.relationship("Organization", primaryjoin=parent_id == id, foreign_keys=id, 
-                               remote_side=parent_id, uselist=True)
+    children = db.relationship("Organization", primaryjoin='Organization.parent_id == Organization.id', foreign_keys='Organization.parent_id',
+        remote_side='Organization.id', uselist=True)
     
 
 class Equipment(db.Model):
@@ -38,7 +38,7 @@ class Equipment(db.Model):
     __tablename__ = "equipment"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
-    equipment_name = db.Column(db.String(255), nullable=False, doc="Наименование оборудования")
+    equipment_name = db.Column(db.String(255), nullable=False, doc="Наименование ЭФО")
     #technical_tasks = db.relationship("TechnicalTask", back_populates="equipment",passive_deletes=True)
 
 
@@ -49,5 +49,8 @@ class PersonInfo(db.Model):
     __tablename__= 'person_info'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True) 
-    military_unit_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organization.id')) # ссылка на предыдущу
+    military_unit_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organization.id')) 
     military_unit = db.Column(UUID(as_uuid=True),nullable=True, doc='Войсковая часть')
+    organization_id = db.Column(UUID(as_uuid=True),
+                                 db.ForeignKey('organization.id', ondelete='SET NULL'),nullable=True)
+    
