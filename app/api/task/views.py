@@ -38,7 +38,7 @@ class TaskList(MethodView):
             return jsonify(err.messages), 400
         
         task = self.model(**val_data) # создал ORM-объект
-        task.creating_author_id = GetCurrentUserID()
+        task.creating_author_id = None
         task.status = "INITIALIZED" #фиксированный статус при создании новго тз
         task.parent_id = None
         task.is_active = True
