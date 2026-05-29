@@ -10,7 +10,6 @@ from app.database.schemas import OrganizationSchema,EquipmentSchema, \
     TechnicalTaskCreateSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema
 
 task_in_schema = TechnicalTaskInSchema()
-task_out_schema = TechnicalTaskOutSchema()
 tasks_out_schema = TechnicalTaskOutSchema(many=True)
 status_schema = StatusSchema() 
 
@@ -25,21 +24,53 @@ def GetCurrentUserID():
 
 class TaskList(MethodView):
     model = TechnicalTask
-    schema = 
+    schema = xxx
 
-    def get(self):
-        result = tasks_out_schema.dump(self.model.query.filter(self.model.deletion_mark.is_(False)).all())
-        return jsonify(result) 
- #базовый пост запрос на создание нового тз, от клиента принимаем только тайтл и валидируем
+    def get(self): 
+        return jsonify(self.briefing_schema (many=True).dump(self.
+                briefing_model.query.filter(self.briefing_model.deletion_mark.is_(False)).all()))
+
     def post(self):
-        data = request.get_json() # читает данные из запроса
-        if data is None:
-            return jsonify({"error": "JSON необхлдим"}), 400
+        data = request.get_json()
         try:
-            val_data = task_in_schema.load(data) #валидирует данные от клиента (десериализация)
+            current_user = GetCurrentUserId()
+            target_briefing = self.briefing_schema().load(data, session=db.session, unknown=EXCLUDE) 
+            target_briefing.creating_author_id = current_user
+            db.session.add(target_briefing)
+            if not data.get('persons'):
+                raise ValidationError({'persons': ['Отсутствует список ЛС, проходящего проверку']}) 
+            for person in data['persons']:
+                if not person.get('id'):
+                    person['id'] = uuid.uuid4()
+                    target_person = None
+                else:
+                    target_person = PersonInfo.query.get(person['id'])
+                if not target_person:
+                    target_person = PersonInfoSchema().load(person, session=db.session, unknown=EXCLUDE)
+                    db.session.add(target_person)
+                    grades = self.grades_schema().load(person, session-db.session, unknown=EXCLUDE) 
+                    grades. person = target_person
+                    grades.briefing = target_briefing
+                    db.session.add(grades)
         except ValidationError as err:
-            return jsonify(err.messages), 400
+            db.session.rollback()
+            return UnprocessableEntitySchema().dump (dict (messages-err.messages)), 422 
+        db.session.commit()
+        return SuccessResponseSchema().dump(
+            dict(message='Данные проведенного инструктажа успешно добавлены')), 201
+    
+    def delete(self): 
+        target_id = request.args.get('id')
+        target_briefing = self.briefing_model.query.get(target_id)
+        if not target_briefing:
+            return BadIdResponseSchema().dump (dict (message='неверный id инструктажа')), 422
+        current_user = GetCurrentUserId()
+        target_briefing.deletion_mark = True
+        target_briefing.deleting_author_id = current_user
+        db.session.commit()
+        return SuccessResponseSchema().dump(dict(message='Данные инструктажа успешно удалены')), 201
         
+"""
         task = self.model(**val_data) # создал ORM-объект
         task.id = uuid.uuid4()
         task.creating_author_id = None
@@ -51,7 +82,9 @@ class TaskList(MethodView):
         db.session.commit()
 
         return jsonify(task_out_schema.dump(task)), 201
-    
+"""
+
+
 class TaskOne(MethodView):
     model = TechnicalTask
     schema = task_out_schema
