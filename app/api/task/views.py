@@ -4,8 +4,10 @@ from marshmallow import ValidationError, EXCLUDE
 import uuid
 
 from app import db
-from app.database.models import TechnicalTask
-from app.database.schemas import TechnicalTaskInSchema, TechnicalTaskOutSchema, StatusSchema
+from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TechnicalTaskPerson
+from app.database.schemas import OrganizationSchema,EquipmentSchema, \
+    StatusSchema, PersonInfoSchema,TechnicalTaskSchema, TechnicalTaskPersonSchema, TaskPersonSchema, \
+    TechnicalTaskCreateSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema
 
 task_in_schema = TechnicalTaskInSchema()
 task_out_schema = TechnicalTaskOutSchema()
@@ -22,7 +24,8 @@ def GetCurrentUserID():
     return uuid.UUID('fed3e0ec-673c-49ab-b73e-8d9934bf0d70')
 
 class TaskList(MethodView):
-    model = TechnicalTask 
+    model = TechnicalTask
+    schema = 
 
     def get(self):
         result = tasks_out_schema.dump(self.model.query.filter(self.model.deletion_mark.is_(False)).all())
@@ -33,19 +36,18 @@ class TaskList(MethodView):
         if data is None:
             return jsonify({"error": "JSON необхлдим"}), 400
         try:
-            val_data = task_in_schema.load(data) # валидирует данные от клиента (десериализация)
+            val_data = task_in_schema.load(data) #валидирует данные от клиента (десериализация)
         except ValidationError as err:
             return jsonify(err.messages), 400
         
         task = self.model(**val_data) # создал ORM-объект
         task.id = uuid.uuid4()
         task.creating_author_id = None
-        task.status = "INITIALIZED" #фиксированный статус при создании новго тз
+        task.status = "INITIALIZED" 
         task.parent_id = None
         task.is_active = True
-        #task.version = 1
 
-        db.session.add(task) # записал строку в бд
+        db.session.add(task) 
         db.session.commit()
 
         return jsonify(task_out_schema.dump(task)), 201
