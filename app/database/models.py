@@ -8,7 +8,7 @@ class TechnicalTask(db.Model):
 
     __tablename__= 'technical_task'
     
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4) #uuid первичный ключ
+    id = db.Column(UUID(as_uuid=True), primary_key=True) #uuid первичный ключ
     parent_id = db.Column(UUID(as_uuid=True),db.ForeignKey('technical_task.id', 
                             ondelete='SET NULL'),doc='id предыдущей версии') # ссылка на предыдущую версию
     
@@ -64,7 +64,8 @@ class PersonInfo(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
 
-    organization_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organization.id',ondelete='SET NULL')) 
+    organization_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organization.id',
+                            ondelete='SET NULL')) #Если организация меняется, человек как запись может остаться.
     organization = db.relationship('Organization',passive_deletes=True, doc='Войсковая часть')
     
     department = db.Column(db.String(255), doc='Подразделение')
@@ -83,7 +84,7 @@ class TechnicalTaskPerson(db.Model):
                         nullable=False, doc='id ТЗ')
     task = db.relationship('TechnicalTask', passive_deletes = True, doc = 'ТЗ')
 
-    person_id = db.Column(UUID(as_uuid=True), db.ForeignKey('person_info.id', ondelete='CASCADE'),
+    person_id = db.Column(UUID(as_uuid=True), db.ForeignKey('person_info.id', ondelete='RESRTICT'),
                           nullable=False, doc='id человека')
     person = db.relationship('PersonInfo', passive_deletes=True, doc='Человек')
 
