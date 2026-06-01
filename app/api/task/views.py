@@ -48,13 +48,13 @@ class TaskList(MethodView):
                 if not target_person:
                     target_person = PersonInfoSchema().load(person, session=db.session, unknown=EXCLUDE)
                     db.session.add(target_person)
-                    grades = self.grades_schema().load(person, session-db.session, unknown=EXCLUDE) 
+                    grades = self.grades_schema().load(person, session=db.session, unknown=EXCLUDE) 
                     grades. person = target_person
                     grades.briefing = target_briefing
                     db.session.add(grades)
         except ValidationError as err:
             db.session.rollback()
-            return UnprocessableEntitySchema().dump (dict (messages-err.messages)), 422 
+            return UnprocessableEntitySchema().dump (dict (messages=err.messages)), 422 
         db.session.commit()
         return SuccessResponseSchema().dump(
             dict(message='Данные проведенного инструктажа успешно добавлены')), 201
@@ -63,12 +63,12 @@ class TaskList(MethodView):
         target_id = request.args.get('id')
         target_briefing = self.briefing_model.query.get(target_id)
         if not target_briefing:
-            return BadIdResponseSchema().dump (dict (message='неверный id инструктажа')), 422
+            return BadIdResponseSchema().dump (dict (message='неверный id ТЗ')), 422
         current_user = GetCurrentUserId()
         target_briefing.deletion_mark = True
         target_briefing.deleting_author_id = current_user
         db.session.commit()
-        return SuccessResponseSchema().dump(dict(message='Данные инструктажа успешно удалены')), 201
+        return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
         
 """
         task = self.model(**val_data) # создал ORM-объект
