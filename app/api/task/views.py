@@ -6,13 +6,13 @@ import uuid
 from app import db
 from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TechnicalTaskPerson
 from app.database.schemas import OrganizationSchema,EquipmentSchema, \
- PersonInfoSchema,TechnicalTaskSchema, TechnicalTaskPersonSchema, TaskPersonSchema, \
-    TechnicalTaskCreateSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema
+ PersonInfoSchema,TechnicalTaskSchema, TechnicalTaskPersonSchema, TaskPersonSchema,  StatusSchema,\
+    TechnicalTaskCreateSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema\
 
 
-def GetCurrentUserID():
-    if PersonInfo.query.get('fed3egec-673c-49ab-b73e-8d9934bf0d70'):
-        return 'fed3egec-673c-49ab-b73e-8d9934bf0d70'
+def GetCurrentUserId():
+    if PersonInfo.query.get('fed3e0ec-673c-49ab-b73e-8d9934bf0d70'):
+        return 'fed3e0ec-673c-49ab-b73e-8d9934bf0d70'
     else: 
         return None 
     
@@ -79,22 +79,7 @@ class TaskOne(MethodView):
         task = self.model.query.get(task_id)
         if not task or task.deletion_mark:
             return jsonify({"error":"ТЗ не найдено"}), 404
-        return jsonify({'TechnicalTask': self.schema.dump(task)})
-
-"""
-class TaskDelete(MethodView):
-    model = TechnicalTask
-
-    def post(self, task_id):
-        task = self.model.query.get(task_id)
-        if task is None:
-            return jsonify({"error":"ТЗ не найдено"}), 404
-        
-        task.deletion_mark = True
-        db.session.commit()
-        
-        return jsonify({"message":"ТЗ успешно удалено"}), 200
-"""
+        return jsonify({'TechnicalTask': self.schema().dump(task)})
 
 # кортеж с фиксированными статусами
 STATUSES = (
@@ -118,10 +103,9 @@ def change_status(current_status, new_status):
 class TaskStatus(MethodView): 
     """статус исполнения тз (машина состояний). редактируется в этом сервисе сразу в таблице"""
     model = TechnicalTask 
-    schema = TechnicalTaskCreateSchema
+    schema = StatusSchema
     task_schema = TechnicalTaskSchema
     
-
     def put(self, task_id): #task_id идентификатор ТЗ, фласк его берёт из адреса запроса.
         data = request.get_json()
         if data is None:

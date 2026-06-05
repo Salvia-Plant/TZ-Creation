@@ -71,10 +71,12 @@ class TechnicalTaskCreateSchema(Schema): #для загрузки
     fault_detected_at = fields.Date(required=True)
     monitoring_id = fields.Str(required=True)
     organization_id = fields.UUID(required=True)
-    status = fields.Str()
     efo_id = fields.UUID(required=True)
     bg_impact = fields.Str(required=False, allow_none=True)
     persons = fields.Nested(TaskPersonSchema, many=True, required=True)
+
+class StatusSchema(Schema):
+    status = fields.Str(required=True)
 
 class SuccessResponseSchema(Schema):
     message = fields.Str()

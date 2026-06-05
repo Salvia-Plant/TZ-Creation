@@ -19,7 +19,7 @@ class TechnicalTask(db.Model):
                       foreign_keys='TechnicalTask.creating_author_id',passive_deletes=True)
     
     deleting_author_id = db.Column(UUID(as_uuid=True), db.ForeignKey('person_info.id', ondelete='SET NULL'))
-    creating_author = db.relationship('PersonInfo', primaryjoin='TechnicalTask.deleting_author_id == PersonInfo.id',
+    deleting_author = db.relationship('PersonInfo', primaryjoin='TechnicalTask.deleting_author_id == PersonInfo.id',
                 foreign_keys='TechnicalTask.deleting_author_id',passive_deletes=True, doc='Удаливший запись')
     organization_id = db.Column(UUID(as_uuid=True),db.ForeignKey('organization.id', 
                                     ondelete='SET NULL'),doc='id организации') #из мониторинга
