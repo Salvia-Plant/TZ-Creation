@@ -39,7 +39,7 @@ class TaskList(MethodView):
             target_task.is_active = True
             db.session.add(target_task)
             if not data.get('persons'):
-                raise ValidationError({'persons': ['Отсутствует список ЛС, проходящего проверку']}) 
+                raise ValidationError({'persons': ['Отсутствует список личного состава для создания ТЗ']}) 
             # заполняем связующую таблицу людьми
             for person_data in persons:
                 target_person = PersonInfo.query.get(person_data['person_id'])
