@@ -33,7 +33,7 @@ class PersonInfoSchema(SQLAlchemyAutoSchema):
     status = fields.Str(required=False, allow_none=True)
     is_active = fields.Boolean(required=False)
 
-class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
+class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа 
     class Meta:
         model = TechnicalTask
         exclude = ('creating_author', 'organization', 'efo')
@@ -52,7 +52,7 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     is_active = fields.Boolean(dump_only=True)
     deletion_mark = fields.Boolean(dump_only=True)
 
-class TechnicalTaskPersonSchema(SQLAlchemyAutoSchema): 
+class TechnicalTaskPersonSchema(SQLAlchemyAutoSchema): #чтение состава ТЗ, отдача связей ТЗ -люди, потенциально сериализация этих записей
     class Meta:
         model = TechnicalTaskPerson
         exclude = ('task', 'person')
@@ -62,15 +62,16 @@ class TechnicalTaskPersonSchema(SQLAlchemyAutoSchema):
     person_id = fields.UUID(required=True)
     role = fields.Str(required=True)
 
-class TaskPersonSchema(Schema): #отдельная схема для людей, т.к нужно знать кого выбрали и в какой роли
+class TaskPersonSchema(Schema): #отдельная схема для людей (для загрузки), т.к нужно знать кого выбрали и в какой роли
     person_id = fields.UUID(required=True)
     role = fields.Str(required=True)
 
-class TechnicalTaskCreateSchema(Schema):
+class TechnicalTaskCreateSchema(Schema): #для загрузки
     title = fields.Str(required=True)
     fault_detected_at = fields.Date(required=True)
     monitoring_id = fields.Str(required=True)
     organization_id = fields.UUID(required=True)
+    status = fields.Str()
     efo_id = fields.UUID(required=True)
     bg_impact = fields.Str(required=False, allow_none=True)
     persons = fields.Nested(TaskPersonSchema, many=True, required=True)

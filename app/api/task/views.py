@@ -6,7 +6,7 @@ import uuid
 from app import db
 from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TechnicalTaskPerson
 from app.database.schemas import OrganizationSchema,EquipmentSchema, \
-    StatusSchema, PersonInfoSchema,TechnicalTaskSchema, TechnicalTaskPersonSchema, TaskPersonSchema, \
+ PersonInfoSchema,TechnicalTaskSchema, TechnicalTaskPersonSchema, TaskPersonSchema, \
     TechnicalTaskCreateSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema
 
 
@@ -35,24 +35,22 @@ class TaskList(MethodView):
             target_task.id = uuid.uuid4()
             target_task.creating_author_id = current_user
             target_task.status = "INITIALIZED" 
-            target_task.parent_id = None
+            #target_task.parent_id = None #потом для перегенерации
             target_task.is_active = True
-            db.session.add(task)
+            db.session.add(target_task)
             if not data.get('persons'):
                 raise ValidationError({'persons': ['Отсутствует список ЛС, проходящего проверку']}) 
-            for person in data['persons']:
-                if not person.get('id'):
-                    person['id'] = uuid.uuid4()
-                    target_person = None
-                else:
-                    target_person = PersonInfo.query.get(person['id'])
+            # заполняем связующую таблицу людьми
+            for person_data in persons:
+                target_person = PersonInfo.query.get(person_data['person_id'])
                 if not target_person:
-                    target_person = PersonInfoSchema().load(person, session=db.session, unknown=EXCLUDE)
-                    db.session.add(target_person)
-                    grades = self.grades_schema().load(person, session=db.session, unknown=EXCLUDE) 
-                    grades. person = target_person
-                    grades.briefing = target_briefing
-                    db.session.add(grades)
+                    raise ValidationError({'person_id': "Человек не найден"})
+                task_person = TechnicalTaskPerson(
+                    task=target_task,
+                    person=target_person,
+                    role=person_data['role']
+                )
+                db.session.add(task_person)
         except ValidationError as err:
             db.session.rollback()
             return UnprocessableEntitySchema().dump (dict (messages=err.messages)), 422 
@@ -70,18 +68,12 @@ class TaskList(MethodView):
         target_task.deleting_author_id = current_user
         db.session.commit()
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
-        
-"""
 
-        db.session.commit()
-
-        return jsonify(task_out_schema.dump(task)), 201
-"""
 
 
 class TaskOne(MethodView):
     model = TechnicalTask
-    schema = task_out_schema
+    schema = TechnicalTaskSchema
 
     def get(self, task_id):
         task = self.model.query.get(task_id)
@@ -126,13 +118,16 @@ def change_status(current_status, new_status):
 class TaskStatus(MethodView): 
     """статус исполнения тз (машина состояний). редактируется в этом сервисе сразу в таблице"""
     model = TechnicalTask 
+    schema = TechnicalTaskCreateSchema
+    task_schema = TechnicalTaskSchema
+    
 
     def put(self, task_id): #task_id идентификатор ТЗ, фласк его берёт из адреса запроса.
         data = request.get_json()
         if data is None:
             return jsonify({"error":"JSON необходим"}), 400
         try:
-            val_data = status_schema.load(data)
+            val_data = self.schema().load(data)
         except ValidationError as err:
             return jsonify(err.messages), 400
         task = self.model.query.get(task_id) #локал переменная, в которой орм объект конкрет ТЗ.
@@ -158,7 +153,7 @@ class TaskStatus(MethodView):
         task.status = new_status #присваиваем новое значение орм объекту
         db.session.commit()
         
-        return jsonify(task_out_schema.dump(task)), 200
+        return jsonify(self.task_schema().dump(task)), 200
 
 
 class TaskRegenerate(MethodView):
