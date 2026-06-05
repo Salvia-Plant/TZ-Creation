@@ -9,34 +9,35 @@ from app.database.schemas import OrganizationSchema,EquipmentSchema, \
     StatusSchema, PersonInfoSchema,TechnicalTaskSchema, TechnicalTaskPersonSchema, TaskPersonSchema, \
     TechnicalTaskCreateSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema
 
-task_in_schema = TechnicalTaskInSchema()
-tasks_out_schema = TechnicalTaskOutSchema(many=True)
-status_schema = StatusSchema() 
 
-#def GetCurrentUserID():
-#    if PersonInfo.query.get('fed3egec-673c-49ab-b73e-8d9934bf0d70'):
-#        return 'fed3egec-673c-49ab-b73e-8d9934bf0d70'
-#    else: 
-#        return None  #это когда появится таблица 
-    
 def GetCurrentUserID():
-    return uuid.UUID('fed3e0ec-673c-49ab-b73e-8d9934bf0d70')
-
+    if PersonInfo.query.get('fed3egec-673c-49ab-b73e-8d9934bf0d70'):
+        return 'fed3egec-673c-49ab-b73e-8d9934bf0d70'
+    else: 
+        return None 
+    
 class TaskList(MethodView):
     model = TechnicalTask
-    schema = xxx
+    create_schema = TechnicalTaskCreateSchema
+    task_schema = TechnicalTaskSchema
 
     def get(self): 
-        return jsonify(self.briefing_schema (many=True).dump(self.
-                briefing_model.query.filter(self.briefing_model.deletion_mark.is_(False)).all()))
+        return jsonify(self.task_schema(many=True).dump(self.
+                model.query.filter(self.model.deletion_mark.is_(False)).all()))
 
     def post(self):
         data = request.get_json()
         try:
             current_user = GetCurrentUserId()
-            target_briefing = self.briefing_schema().load(data, session=db.session, unknown=EXCLUDE) 
-            target_briefing.creating_author_id = current_user
-            db.session.add(target_briefing)
+            val_data = self.create_schema().load(data, unknown=EXCLUDE) 
+            persons = val_data.pop('persons') #отдельно берём людей, их не надо в technicaltask
+            target_task = self.model(**val_data) # создал ORM-объект
+            target_task.id = uuid.uuid4()
+            target_task.creating_author_id = current_user
+            target_task.status = "INITIALIZED" 
+            target_task.parent_id = None
+            target_task.is_active = True
+            db.session.add(task)
             if not data.get('persons'):
                 raise ValidationError({'persons': ['Отсутствует список ЛС, проходящего проверку']}) 
             for person in data['persons']:
@@ -57,28 +58,21 @@ class TaskList(MethodView):
             return UnprocessableEntitySchema().dump (dict (messages=err.messages)), 422 
         db.session.commit()
         return SuccessResponseSchema().dump(
-            dict(message='Данные проведенного инструктажа успешно добавлены')), 201
+            dict(message='Данные ТЗ успешно добавлены')), 201
     
     def delete(self): 
         target_id = request.args.get('id')
-        target_briefing = self.briefing_model.query.get(target_id)
-        if not target_briefing:
+        target_task = self.model.query.get(target_id)
+        if not target_task:
             return BadIdResponseSchema().dump (dict (message='неверный id ТЗ')), 422
         current_user = GetCurrentUserId()
-        target_briefing.deletion_mark = True
-        target_briefing.deleting_author_id = current_user
+        target_task.deletion_mark = True
+        target_task.deleting_author_id = current_user
         db.session.commit()
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
         
 """
-        task = self.model(**val_data) # создал ORM-объект
-        task.id = uuid.uuid4()
-        task.creating_author_id = None
-        task.status = "INITIALIZED" 
-        task.parent_id = None
-        task.is_active = True
 
-        db.session.add(task) 
         db.session.commit()
 
         return jsonify(task_out_schema.dump(task)), 201
@@ -94,7 +88,8 @@ class TaskOne(MethodView):
         if not task or task.deletion_mark:
             return jsonify({"error":"ТЗ не найдено"}), 404
         return jsonify({'TechnicalTask': self.schema.dump(task)})
-    
+
+"""
 class TaskDelete(MethodView):
     model = TechnicalTask
 
@@ -107,6 +102,7 @@ class TaskDelete(MethodView):
         db.session.commit()
         
         return jsonify({"message":"ТЗ успешно удалено"}), 200
+"""
 
 # кортеж с фиксированными статусами
 STATUSES = (

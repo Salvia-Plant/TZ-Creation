@@ -4,12 +4,6 @@ import uuid
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from .models import TechnicalTask, Organization, Equipment, PersonInfo, TechnicalTaskPerson
 
-#class TechnicalTaskSchema(SQLAlchemyAutoSchema): - на случай если нужно использовать класс мета    
-#    class Meta:
-#        model = TechnicalTask
-#        load_instance = True
-
-
 class OrganizationSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Organization
@@ -19,14 +13,12 @@ class OrganizationSchema(SQLAlchemyAutoSchema):
     org_title = fields.Str(required=True)
     org_type = fields.Str(required=False, allow_none=True)
 
-
 class EquipmentSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Equipment
 
     id = fields.UUID(required=True)
     equipment_name = fields.Str(required=True)
-
 
 class PersonInfoSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -41,8 +33,7 @@ class PersonInfoSchema(SQLAlchemyAutoSchema):
     status = fields.Str(required=False, allow_none=True)
     is_active = fields.Boolean(required=False)
 
-
-class TechnicalTaskSchema(SQLAlchemyAutoSchema):
+class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     class Meta:
         model = TechnicalTask
         exclude = ('creating_author', 'organization', 'efo')
@@ -61,8 +52,7 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema):
     is_active = fields.Boolean(dump_only=True)
     deletion_mark = fields.Boolean(dump_only=True)
 
-
-class TechnicalTaskPersonSchema(SQLAlchemyAutoSchema): #вот здесь вчера остановилась
+class TechnicalTaskPersonSchema(SQLAlchemyAutoSchema): 
     class Meta:
         model = TechnicalTaskPerson
         exclude = ('task', 'person')
@@ -72,11 +62,9 @@ class TechnicalTaskPersonSchema(SQLAlchemyAutoSchema): #вот здесь вче
     person_id = fields.UUID(required=True)
     role = fields.Str(required=True)
 
-
-class TaskPersonSchema(Schema):
+class TaskPersonSchema(Schema): #отдельная схема для людей, т.к нужно знать кого выбрали и в какой роли
     person_id = fields.UUID(required=True)
     role = fields.Str(required=True)
-
 
 class TechnicalTaskCreateSchema(Schema):
     title = fields.Str(required=True)
@@ -87,14 +75,11 @@ class TechnicalTaskCreateSchema(Schema):
     bg_impact = fields.Str(required=False, allow_none=True)
     persons = fields.Nested(TaskPersonSchema, many=True, required=True)
 
-
 class SuccessResponseSchema(Schema):
     message = fields.Str()
 
-
 class BadIdResponseSchema(Schema):
     message = fields.Str()
-
 
 class UnprocessableEntitySchema(Schema):
     messages = fields.Dict(fields.Str())
