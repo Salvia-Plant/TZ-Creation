@@ -69,8 +69,6 @@ class TaskList(MethodView):
         db.session.commit()
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
 
-
-
 class TaskOne(MethodView):
     model = TechnicalTask
     schema = TechnicalTaskSchema
