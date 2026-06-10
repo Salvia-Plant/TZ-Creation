@@ -68,7 +68,7 @@ class TaskPersonSchema(Schema): #отдельная схема для людей
 
 class TechnicalTaskCreateSchema(Schema): #для загрузки
     title = fields.Str(required=True)
-    fault_detected_at = fields.Date(required=True)
+    fault_detected_at = fields.DateTime(required=True)
     monitoring_id = fields.Str(required=True)
     organization_id = fields.UUID(required=True)
     efo_id = fields.UUID(required=True)

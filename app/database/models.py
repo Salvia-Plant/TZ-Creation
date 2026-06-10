@@ -30,7 +30,7 @@ class TechnicalTask(db.Model):
     efo = db.relationship('Equipment', passive_deletes=True, doc='ЭФО')
     
     bg_impact = db.Column(db.String(255), doc='Влияние на БГ') #из мониторинга
-    fault_detected_at = db.Column(db.Date, doc='Дата обнаружения неисправности')#из мониторинга
+    fault_detected_at = db.Column(db.DateTime, doc='Дата обнаружения неисправности')#из мониторинга
     monitoring_id = db.Column(db.String(255), doc='id записи из Monitoring')#из мониторинга
 
     created_at = db.Column(db.DateTime, default=datetime.now, doc='Дата создания записи')
@@ -46,8 +46,6 @@ class Organization(db.Model):
     __tablename__ = "organization"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
-    
-    org_type = db.Column(db.String(255), nullable = True, doc = 'Тип организации (Изготовитель или ЭксплуатирующаяОрганизация)')
     org_title = db.Column(db.String(255), nullable=False, doc="Наименование организации")
     
 
@@ -83,12 +81,12 @@ class TechnicalTaskPerson(db.Model):
     """Личный состав для создания ТЗ"""
     __tablename__ = 'technical_task_person'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = db.Column(UUID(as_uuid=True), primary_key=True)
     task_id = db.Column(UUID(as_uuid=True), db.ForeignKey('technical_task.id', ondelete='CASCADE'), 
                         nullable=False, doc='id ТЗ')
     task = db.relationship('TechnicalTask', passive_deletes = True, doc = 'ТЗ')
 
-    person_id = db.Column(UUID(as_uuid=True), db.ForeignKey('person_info.id', ondelete='RESRTICT'),
+    person_id = db.Column(UUID(as_uuid=True), db.ForeignKey('person_info.id', ondelete='RESTRICT'),
                           nullable=False, doc='id человека')
     person = db.relationship('PersonInfo', passive_deletes=True, doc='Человек')
 
