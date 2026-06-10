@@ -1,6 +1,5 @@
 from marshmallow import Schema, fields, EXCLUDE, post_load, pre_load, validate
 from .models import *
-import uuid
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from .models import TechnicalTask, Organization, Equipment, PersonInfo, TechnicalTaskPerson
 
@@ -9,9 +8,7 @@ class OrganizationSchema(SQLAlchemyAutoSchema):
         model = Organization
 
     id = fields.UUID(required=True)
-    parent_id = fields.UUID(required=False, allow_none=True)
     org_title = fields.Str(required=True)
-    org_type = fields.Str(required=False, allow_none=True)
 
 class EquipmentSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -36,15 +33,16 @@ class PersonInfoSchema(SQLAlchemyAutoSchema):
 class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа 
     class Meta:
         model = TechnicalTask
-        exclude = ('creating_author', 'organization', 'efo')
+        exclude = ('creating_author', 'deleting_author', 'organization', 'efo')
 
     id = fields.UUID(dump_only=True)
     parent_id = fields.UUID(required=False, allow_none=True)
     creating_author_id = fields.UUID(required=False, allow_none=True)
+    deleting_author_id = fields.UUID(required=False, allow_none=True)
     organization_id = fields.UUID(required=False, allow_none=True)
     efo_id = fields.UUID(required=False, allow_none=True)
     bg_impact = fields.Str(required=False, allow_none=True)
-    fault_detected_at = fields.Date(required=False, allow_none=True)
+    fault_detected_at = fields.DateTime(required=False, allow_none=True)
     monitoring_id = fields.Str(required=False, allow_none=True)
     created_at = fields.DateTime(dump_only=True)
     title = fields.Str(required=True)

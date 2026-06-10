@@ -18,6 +18,7 @@ def GetCurrentUserId():
     
 class TaskList(MethodView):
     model = TechnicalTask
+    model2 = TechnicalTaskPerson
     create_schema = TechnicalTaskCreateSchema
     task_schema = TechnicalTaskSchema
 
@@ -27,6 +28,8 @@ class TaskList(MethodView):
 
     def post(self):
         data = request.get_json()
+        if data is None:
+            return jsonify({"error": "JSON необходим"}), 400
         try:
             current_user = GetCurrentUserId()
             val_data = self.create_schema().load(data, unknown=EXCLUDE) 
@@ -45,11 +48,11 @@ class TaskList(MethodView):
                 target_person = PersonInfo.query.get(person_data['person_id'])
                 if not target_person:
                     raise ValidationError({'person_id': "Человек не найден"})
-                task_person = TechnicalTaskPerson(
-                    task=target_task,
-                    person=target_person,
-                    role=person_data['role']
-                )
+                task_person = self.model2(
+                id = uuid.uuid4(),
+                task=target_task,
+                person=target_person,
+                role=person_data['role'])
                 db.session.add(task_person)
         except ValidationError as err:
             db.session.rollback()
