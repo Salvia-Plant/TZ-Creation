@@ -125,8 +125,8 @@ def change_status(current_status, new_status):
 
 class Statuses(MethodView):
     """отдельная ручка для получения списка статусов. для фронта"""
-    model = TechnicalTask 
-    schema = StatusSchema
+    def get(self):
+        return jsonify(TASK_STATUSES), 200
 
 class TaskStatus(MethodView): 
     """статус исполнения тз (машина состояний). редактируется в этом сервисе сразу в таблице"""
