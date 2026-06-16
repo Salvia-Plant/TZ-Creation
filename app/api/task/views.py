@@ -118,10 +118,31 @@ TASK_STATUSES = [
         "toStates": ["INITIALIZED", "PLAN_CREATED", "APPROVED"],
     },
 ]
-
+"""
 # входит ли новый статус в множество разрешённых переходов для текущего статуса (булевое)
 def change_status(current_status, new_status):
     return new_status in STATUS_TRANSITIONS.get(current_status, set())
+"""
+# вместо старого кортежа STATUSES
+def GetStatuses(): #возвращает ["INITIALIZED","PLAN_CREATED", "APPROVED", "DONE"]
+    values = [] # создаём пустой спсок
+    for status in TASK_STATUSES: # берём один словарь, вытаскиваем из него value и добавляем в пустой список
+        values.append(status["value"])
+    return values
+
+def GetStatusByValue(value): # возвращает полное описание(словарь) статуса по его value 
+    for status in TASK_STATUSES:
+        if status["value"] == value:
+            return status #возвращает весь словарь если INITIALIZED==INITIALIZED и тд
+    return None
+
+def CanChangeStatus(current_status, new_status):
+    if current_status == new_status: #при отправл одного и того же статуса ничего не меняю, отправляю 200 ОК
+        return True
+    status = GetStatusByValue(current_status)
+    if not status: # вот это убрать вероятно
+        return False 
+    return new_status in status["toStates"]
 
 class Statuses(MethodView):
     """отдельная ручка для получения списка статусов. для фронта"""
@@ -148,14 +169,14 @@ class TaskStatus(MethodView):
 
         new_status = val_data["status"] #берём новое значения статуса из присланных данных
         current_status = task.status #берём текущее значение статуса из таблицы
-
-        if new_status not in STATUSES:
+        values = GetStatuses()
+        if new_status not in values:
             return jsonify({
                 "error": "Недопустимый статус",
-                "allowed_statuses": list(STATUSES)
+                "allowed_statuses": GetStatuses() # функция возвращает список допустимых статусов
             }), 400 #если нет такого статуса
 
-        if not change_status(current_status, new_status):
+        if not CanChangeStatus(current_status, new_status):
             return jsonify({
                 "error": "Недопустимый переход статуса",
                 "current_status": current_status,
