@@ -60,7 +60,7 @@ class TechnicalTaskPersonSchema(SQLAlchemyAutoSchema): #чтение соста�
     person_id = fields.UUID(required=True)
     role = fields.Str(required=True)
 
-class TaskPersonSchema(Schema): #отдельная схема для людей (для загрузки), т.к нужно знать кого выбрали и в какой роли
+class PersonRoleSchema(Schema): #отдельная схема для людей (для загрузки), т.к нужно знать кого выбрали и в какой роли
     person_id = fields.UUID(required=True)
     role = fields.Str(required=True)
 
@@ -71,7 +71,7 @@ class TechnicalTaskCreateSchema(Schema): #для загрузки
     organization_id = fields.UUID(required=True)
     efo_id = fields.UUID(required=True)
     bg_impact = fields.Str(required=False, allow_none=True)
-    persons = fields.Nested(TaskPersonSchema, many=True, required=True)
+    persons = fields.Nested(PersonRoleSchema, many=True, required=True)
 
 class StatusSchema(Schema):
     status = fields.Str(required=True)

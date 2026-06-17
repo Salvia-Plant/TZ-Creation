@@ -4,9 +4,10 @@ from marshmallow import ValidationError, EXCLUDE
 import uuid
 
 from app import db
+from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
 from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TechnicalTaskPerson
 from app.database.schemas import OrganizationSchema,EquipmentSchema, \
- PersonInfoSchema,TechnicalTaskSchema, TechnicalTaskPersonSchema, TaskPersonSchema,  StatusSchema,\
+ PersonInfoSchema,TechnicalTaskSchema, TechnicalTaskPersonSchema, PersonRoleSchema,  StatusSchema,\
     TechnicalTaskCreateSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema\
 
 def GetCurrentUserId():
@@ -80,6 +81,7 @@ class TaskOne(MethodView):
         if not task or task.deletion_mark:
             return jsonify({"error":"ТЗ не найдено"}), 404
         return jsonify({'TechnicalTask': self.schema().dump(task)})
+    
 """
 # кортеж с фиксированными статусами
 STATUSES = (
@@ -95,62 +97,18 @@ STATUS_TRANSITIONS = {
     "APPROVED": {"INITIALIZED","PLAN_CREATED","DONE"},
     "DONE": {"INITIALIZED", "PLAN_CREATED", "APPROVED"}, 
 }
-"""
-TASK_STATUSES = [
-    {
-        "text": "Инициализировано",
-        "value": "INITIALIZED",
-        "toStates": ["PLAN_CREATED", "APPROVED", "DONE"],
-    },
-    {
-        "text": "Создан план",
-        "value": "PLAN_CREATED",
-        "toStates": ["INITIALIZED", "APPROVED", "DONE"],
-    },
-    {
-        "text": "Согласовано ТЗ",
-        "value": "APPROVED",
-        "toStates": ["INITIALIZED", "PLAN_CREATED", "DONE"],
-    },
-    {
-        "text": "Работы выполнены",
-        "value": "DONE",
-        "toStates": ["INITIALIZED", "PLAN_CREATED", "APPROVED"],
-    },
-]
-"""
+
 # входит ли новый статус в множество разрешённых переходов для текущего статуса (булевое)
 def change_status(current_status, new_status):
     return new_status in STATUS_TRANSITIONS.get(current_status, set())
 """
-# вместо старого кортежа STATUSES
-def GetStatuses(): #возвращает ["INITIALIZED","PLAN_CREATED", "APPROVED", "DONE"]
-    values = [] # создаём пустой спсок
-    for status in TASK_STATUSES: # берём один словарь, вытаскиваем из него value и добавляем в пустой список
-        values.append(status["value"])
-    return values
-
-def GetStatusByValue(value): # возвращает полное описание(словарь) статуса по его value 
-    for status in TASK_STATUSES:
-        if status["value"] == value:
-            return status #возвращает весь словарь если INITIALIZED==INITIALIZED и тд
-    return None
-
-def CanChangeStatus(current_status, new_status):
-    if current_status == new_status: #при отправл одного и того же статуса ничего не меняю, отправляю 200 ОК
-        return True
-    status = GetStatusByValue(current_status)
-    if not status: # вот это убрать вероятно
-        return False 
-    return new_status in status["toStates"]
-
 class Statuses(MethodView):
     """отдельная ручка для получения списка статусов. для фронта"""
     def get(self):
         return jsonify(TASK_STATUSES), 200
 
 class TaskStatus(MethodView): 
-    """статус исполнения тз (машина состояний). редактируется в этом сервисе сразу в таблице"""
+    """статус исполнения тз, редактируется в этом сервисе сразу в таблице"""
     model = TechnicalTask 
     schema = StatusSchema
     task_schema = TechnicalTaskSchema
@@ -161,31 +119,29 @@ class TaskStatus(MethodView):
             return jsonify({"error":"JSON необходим"}), 400
         try:
             val_data = self.schema().load(data)
+            task = self.model.query.get(task_id) #локал переменная, в которой орм объект конкрет ТЗ.
+            if task is None or task.deletion_mark:
+                return jsonify({"error": "ТЗ не найдено"}), 404 #если нет такого id
+
+            new_status = val_data["status"] #берём новое значения статуса из присланных данных
+            current_status = task.status #берём текущее значение статуса из таблицы
+            values = GetStatusValues() 
+            if new_status not in values: 
+                return jsonify({
+                    "error": "Недопустимый статус",
+                    "allowed_statuses": values
+                }), 400 #если нет такого статуса
+            if not CanChangeStatus(current_status, new_status): 
+                return jsonify({
+                    "error": "Недопустимый переход статуса",
+                    "current_status": current_status,
+                    "new_status": new_status
+                }), 400  #нельзя из текущего состояния перейти в указанный статус
+            task.status = new_status #присваиваем новое значение орм объекту
         except ValidationError as err:
-            return jsonify(err.messages), 400
-        task = self.model.query.get(task_id) #локал переменная, в которой орм объект конкрет ТЗ.
-        if task is None:
-            return jsonify({"error": "ТЗ не найдено"}), 404 #если нет такого id
-
-        new_status = val_data["status"] #берём новое значения статуса из присланных данных
-        current_status = task.status #берём текущее значение статуса из таблицы
-        values = GetStatuses()
-        if new_status not in values:
-            return jsonify({
-                "error": "Недопустимый статус",
-                "allowed_statuses": GetStatuses() # функция возвращает список допустимых статусов
-            }), 400 #если нет такого статуса
-
-        if not CanChangeStatus(current_status, new_status):
-            return jsonify({
-                "error": "Недопустимый переход статуса",
-                "current_status": current_status,
-                "new_status": new_status
-            }), 400  #нельзя из текущего состояния перейти в указанный статус
-
-        task.status = new_status #присваиваем новое значение орм объекту
+            db.session.rollback()
+            return UnprocessableEntitySchema().dump (dict (messages=err.messages)), 422 
         db.session.commit()
-        
         return jsonify(self.task_schema().dump(task)), 200
 
 
