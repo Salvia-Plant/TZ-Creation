@@ -23,7 +23,7 @@ TASK_STATUSES = [
 ]
 
 # вместо старого кортежа STATUSES
-def GetStatuseValues(): #возвращает ["INITIALIZED","PLAN_CREATED", "APPROVED", "DONE"]
+def GetStatusValues(): #возвращает ["INITIALIZED","PLAN_CREATED", "APPROVED", "DONE"]
     values = []
     for status in TASK_STATUSES: # берём один словарь, вытаскиваем из него value и добавляем в пустой список
         values.append(status["value"])
@@ -39,4 +39,6 @@ def CanChangeStatus(current_status, new_status): #булевое
     if current_status == new_status: #при отправл одного и того же статуса ничего не меняю, отправляю 200 ОК
         return True
     status = GetStatusByValue(current_status)
+    #if not status:
+    #   return False # на случай если в БД битый статус (но хз как такое возможно, я всё проверяю, что в БД кладу)
     return new_status in status["toStates"]
