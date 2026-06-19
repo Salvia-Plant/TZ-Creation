@@ -65,7 +65,7 @@ class TaskList(MethodView):
         target_id = request.args.get('id')
         target_task = self.model.query.get(target_id)
         if not target_task:
-            return BadIdResponseSchema().dump (dict (message='неверный id ТЗ')), 422
+            return BadIdResponseSchema().dump (dict (message='неверный id ТЗ')), 404
         current_user = GetCurrentUserId()
         target_task.deletion_mark = True
         target_task.deleting_author_id = current_user
@@ -84,12 +84,7 @@ class TaskOne(MethodView):
     
 """
 # кортеж с фиксированными статусами
-STATUSES = (
-    "INITIALIZED",
-    "PLAN_CREATED",
-    "APPROVED",
-    "DONE",
-)
+STATUSES = ("INITIALIZED", "PLAN_CREATED", "APPROVED", "DONE",)
 # словарь с фиксированными переходами между статусами (значения - множества)
 STATUS_TRANSITIONS = {
     "INITIALIZED": {"PLAN_CREATED","APPROVED","DONE"},
@@ -97,7 +92,6 @@ STATUS_TRANSITIONS = {
     "APPROVED": {"INITIALIZED","PLAN_CREATED","DONE"},
     "DONE": {"INITIALIZED", "PLAN_CREATED", "APPROVED"}, 
 }
-
 # входит ли новый статус в множество разрешённых переходов для текущего статуса (булевое)
 def change_status(current_status, new_status):
     return new_status in STATUS_TRANSITIONS.get(current_status, set())
