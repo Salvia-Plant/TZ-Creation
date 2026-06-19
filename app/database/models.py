@@ -33,6 +33,7 @@ class TechnicalTask(db.Model):
     fault_detected_at = db.Column(db.DateTime, doc='Дата обнаружения неисправности')#из мониторинга
     monitoring_id = db.Column(db.String(255), doc='id записи из Monitoring')#из мониторинга
 
+    number = db.Column(db.String(32), doc='Номер ТЗ')
     created_at = db.Column(db.DateTime, default=datetime.now, doc='Дата создания записи')
     title = db.Column(db.String(255), nullable=False, doc="Название ТЗ")
     status = db.Column(db.String(32), nullable=False, default="INITIALIZED") 
@@ -47,7 +48,7 @@ class Organization(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
     org_title = db.Column(db.String(255), nullable=False, doc="Наименование организации")
-    
+  
 
 class Equipment(db.Model):
     """Оборудование, ЭФО"""
