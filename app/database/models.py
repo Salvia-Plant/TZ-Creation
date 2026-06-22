@@ -3,7 +3,6 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
 
-
 class TechnicalTask(db.Model):
     """основная сущность"""
 
@@ -75,12 +74,11 @@ class PersonInfo(db.Model):
     position = db.Column(db.String(255), doc='Должность')
     rank = db.Column(db.String(255), doc='Звание')
     full_name = db.Column(db.String(255), doc='Фамилия Имя Отчество')
-    status = db.Column(db.String(255), doc='Статус')
-    is_active = db.Column(db.Boolean, default=True, doc='флаг активной записи')
 
-class TechnicalTaskPerson(db.Model):
+
+class TaskPerson(db.Model):
     """Личный состав для создания ТЗ"""
-    __tablename__ = 'technical_task_person'
+    __tablename__ = 'task_person'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
     task_id = db.Column(UUID(as_uuid=True), db.ForeignKey('technical_task.id', ondelete='CASCADE'), 

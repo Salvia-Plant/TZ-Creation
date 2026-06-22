@@ -5,9 +5,9 @@ import uuid
 
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
-from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TechnicalTaskPerson
+from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TaskPerson
 from app.database.schemas import OrganizationSchema,EquipmentSchema, \
- PersonInfoSchema,TechnicalTaskSchema, TechnicalTaskPersonSchema, PersonRoleSchema,  StatusSchema,\
+ PersonInfoSchema,TechnicalTaskSchema, TaskPersonSchema, PersonRoleSchema,  StatusSchema,\
     TechnicalTaskCreateSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema\
 
 def GetCurrentUserId():
@@ -18,7 +18,7 @@ def GetCurrentUserId():
     
 class TaskList(MethodView):
     model = TechnicalTask
-    model2 = TechnicalTaskPerson
+    model2 = TaskPerson
     create_schema = TechnicalTaskCreateSchema
     task_schema = TechnicalTaskSchema
 
@@ -72,7 +72,7 @@ class TaskList(MethodView):
         db.session.commit()
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
 
-class TaskOne(MethodView):
+class SingleTask(MethodView):
     model = TechnicalTask
     schema = TechnicalTaskSchema
 
@@ -82,20 +82,6 @@ class TaskOne(MethodView):
             return jsonify({"error":"ТЗ не найдено"}), 404
         return jsonify({'TechnicalTask': self.schema().dump(task)})
     
-"""
-# кортеж с фиксированными статусами
-STATUSES = ("INITIALIZED", "PLAN_CREATED", "APPROVED", "DONE",)
-# словарь с фиксированными переходами между статусами (значения - множества)
-STATUS_TRANSITIONS = {
-    "INITIALIZED": {"PLAN_CREATED","APPROVED","DONE"},
-    "PLAN_CREATED": {"INITIALIZED","APPROVED","DONE"},
-    "APPROVED": {"INITIALIZED","PLAN_CREATED","DONE"},
-    "DONE": {"INITIALIZED", "PLAN_CREATED", "APPROVED"}, 
-}
-# входит ли новый статус в множество разрешённых переходов для текущего статуса (булевое)
-def change_status(current_status, new_status):
-    return new_status in STATUS_TRANSITIONS.get(current_status, set())
-"""
 class Statuses(MethodView):
     """отдельная ручка для получения списка статусов. для фронта"""
     def get(self):
@@ -138,7 +124,6 @@ class TaskStatus(MethodView):
         db.session.commit()
         return jsonify(self.task_schema().dump(task)), 200
 
-
 class TaskRegenerate(MethodView):
     model = TechnicalTask
 #это пока что временная бессмысленная "загушка", не полноценный процесс перегенерации 
@@ -148,8 +133,4 @@ class TaskRegenerate(MethodView):
         if task is None:
             return jsonify({"error":"ТЗ не найдено"}), 404
         
-        return jsonify({
-            "message": "Перегенерация ТЗ запущена",
-            "task_id": str(task.id),
-            "current_status": task.status
-        }), 200
+        return jsonify({"message": "Перегенерация ТЗ запущена"}), 200

@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields, EXCLUDE, post_load, pre_load, validate
 from .models import *
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from .models import TechnicalTask, Organization, Equipment, PersonInfo, TechnicalTaskPerson
+from .models import TechnicalTask, Organization, Equipment, PersonInfo, TaskPerson
 
 class OrganizationSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -50,9 +50,9 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     is_active = fields.Boolean(dump_only=True)
     deletion_mark = fields.Boolean(dump_only=True)
 
-class TechnicalTaskPersonSchema(SQLAlchemyAutoSchema): #чтение состава ТЗ, отдача связей ТЗ -люди, потенциально сериализация этих записей
+class TaskPersonSchema(SQLAlchemyAutoSchema): #чтение состава ТЗ, отдача связей ТЗ -люди, потенциально сериализация этих записей
     class Meta:
-        model = TechnicalTaskPerson
+        model = TaskPerson
         exclude = ('task', 'person')
 
     id = fields.UUID(dump_only=True)
