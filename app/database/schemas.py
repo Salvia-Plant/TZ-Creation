@@ -28,7 +28,6 @@ class PersonInfoSchema(SQLAlchemyAutoSchema):
     rank = fields.Str(required=False, allow_none=True)
     full_name = fields.Str(required=False, allow_none=True)
     status = fields.Str(required=False, allow_none=True)
-    is_active = fields.Boolean(required=False)
 
 class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа 
     class Meta:
@@ -46,6 +45,7 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     monitoring_id = fields.Str(required=False, allow_none=True)
     created_at = fields.DateTime(dump_only=True)
     title = fields.Str(required=True)
+    number = fields.Str(dump_only=True)
     status = fields.Str(dump_only=True)
     is_active = fields.Boolean(dump_only=True)
     deletion_mark = fields.Boolean(dump_only=True)
