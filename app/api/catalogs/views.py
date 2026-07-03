@@ -7,10 +7,13 @@ from app.database.schemas import OrganizationSchema,EquipmentSchema, \
  PersonInfoSchema,TechnicalTaskSchema, TaskPersonSchema, PersonRoleSchema,  StatusSchema,\
     TechnicalTaskCreateSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema\
 
-class CatalogPersonnel(MethodView):
-    def get(self):
-        ...
+class CatalogPersonnel(MethodView, CatalogMixin):
+    model = PersonInfo
+    schema = PersonInfoSchema
 
+    def get(self):
+        return jsonify(self.model.query.get.all())
+    
 class CatalogOrganizations(MethodView):
     def get(self):
         ...

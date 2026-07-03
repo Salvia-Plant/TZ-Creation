@@ -64,14 +64,17 @@ class PersonRoleSchema(Schema): #отдельная схема для людей
     person_id = fields.UUID(required=True)
     role = fields.Str(required=True)
 
-class TechnicalTaskCreateSchema(Schema): #для загрузки
+class TaskUpdateSchema(Schema):
     title = fields.Str(required=True)
-    fault_detected_at = fields.DateTime(required=True)
-    monitoring_id = fields.Str(required=True)
-    organization_id = fields.UUID(required=True)
-    efo_id = fields.UUID(required=True)
-    bg_impact = fields.Str(required=False, allow_none=True)
-    persons = fields.Nested(PersonRoleSchema, many=True, required=True)
+    persons=fields.Nested(PersonRoleSchema, many=True, required=True)
+    
+class CreateTaskSchema(Schema):
+    malfunction_time = fields.Date(required=True)
+    measurement_id = fields.UUID(required=True)
+    organization_ref = fields.UUID(required=True)
+    efo_ref = fields.UUID(required=True)
+    combat_impact = fields.Boolean(required=False, allow_none=True)
+
 
 class StatusSchema(Schema):
     status = fields.Str(required=True)
