@@ -46,7 +46,12 @@ class Organization(db.Model):
     __tablename__ = "organization"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
+    parent_id = db.Column(UUID(as_uuid=True), doc='id родителя')
+    org_type = db.Column(db.String(255), doc= 'Тип организации (Изготовитель или Эксплуатирующая Организация)')
     org_title = db.Column(db.String(255), nullable=False, doc="Наименование организации")
+
+    children = db.relationship('Organization', primaryjoin=parent_id == id, foreign_keys=id,
+                               remote_side=parent_id, uselist=True)
   
 
 class Equipment(db.Model):

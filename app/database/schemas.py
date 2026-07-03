@@ -8,7 +8,11 @@ class OrganizationSchema(SQLAlchemyAutoSchema):
         model = Organization
 
     id = fields.UUID(required=True)
+    parent_id = fields.UUID(required=True)
+    org_type = fields.Str(required=True)
     org_title = fields.Str(required=True)
+
+    children = fields.Nested('OrganizationSchema', many=True, dump_only=True)
 
 class EquipmentSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -44,7 +48,6 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     fault_detected_at = fields.DateTime(required=False, allow_none=True)
     monitoring_id = fields.Str(required=False, allow_none=True)
     created_at = fields.DateTime(dump_only=True)
-    title = fields.Str(required=True)
     number = fields.Str(dump_only=True)
     status = fields.Str(dump_only=True)
     is_active = fields.Boolean(dump_only=True)

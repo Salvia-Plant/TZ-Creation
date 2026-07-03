@@ -6,7 +6,7 @@ import uuid
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
 from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TaskPerson
-from app.database.schemas import OrganizationSchema,EquipmentSchema, \
+from app.database.schemas import OrganizationSchema,EquipmentSchema, TaskUpdateSchema, \
  PersonInfoSchema,TechnicalTaskSchema, TaskPersonSchema, PersonRoleSchema,  StatusSchema,\
     CreateTaskSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema\
 
@@ -57,40 +57,76 @@ class TaskList(MethodView):
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
     
 class TaskUpdate(MethodView):
+    model = TechnicalTask
+    person_model = PersonInfo
+    model2 = TaskPerson
+    update_schema = TaskUpdateSchema()
+    task_schema = TechnicalTaskSchema()
+    task_person_schema = TaskPersonSchema(many=True)
+
     def put(self, task_id):
         data = request.get_json()
         if data is None:
-            return jsonify({"error": "JSON необходим"}), 400
+            return jsonify({
+                "error": "JSON необходим"
+            }), 400
+        target_task = self.model.query.get(task_id)
+        if target_task is None or target_task.deletion_mark:
+            return jsonify({"error": "ТЗ не найдено"}), 404
         try:
-            current_user = GetCurrentUserId()
-            val_data = self.create_schema().load(data, unknown=EXCLUDE) 
-            persons = val_data.pop('persons') #отдельно берём людей, их не надо в technicaltask
+            # Валидируем payload:
+            # {
+            #     "persons": [
+            #         {"person_id": "...", "role": "..."}
+            #     ]
+            # }
+            val_data = self.update_schema.load(data,unknown=EXCLUDE)
+            persons = val_data["persons"]
             if not persons:
-                raise ValidationError({'persons': ['Отсутствует список личного состава для создания ТЗ']}) 
-            target_task = self.model(**val_data) # создал ORM-объект
-            target_task.id = uuid.uuid4()
-            target_task.creating_author_id = current_user
-            target_task.status = "INITIALIZED" 
-            #target_task.parent_id = None #потом для перегенерации
-            target_task.is_active = True
-            db.session.add(target_task)
-            # заполняем связующую таблицу людьми
+                raise ValidationError({"persons": ["Список личного состава не может быть пустым"]})
+            # Сначала проверяем всех людей.
+            # Пока ничего в БД не удаляем и не создаём.
+            validated_persons = []
             for person_data in persons:
-                target_person = PersonInfo.query.get(person_data['person_id'])
+                target_person = self.person_model.query.get(person_data["person_id"])
                 if not target_person:
-                    raise ValidationError({'person_id': "Человек не найден"})
+                    raise ValidationError({
+                        "persons": [
+                            f'Человек с id {person_data["person_id"]} не найден'
+                        ]
+                    })
+
+                validated_persons.append({
+                    "person": target_person,
+                    "role": person_data["role"]
+                })
+            # Автором считаем пользователя, который впервые
+            # дозаполнил созданную Monitoring запись.
+            current_user = GetCurrentUserId()
+            if target_task.creating_author_id is None:
+                target_task.creating_author_id = current_user
+            # PUT передаёт полное новое состояние личного состава,
+            # поэтому прежние связи удаляем.
+            self.model2.query.filter_by(task_id=task_id).delete(synchronize_session=False)
+            # Создаём новый состав.
+            for person_data in validated_persons:
                 task_person = self.model2(
-                id = uuid.uuid4(),
-                task=target_task,
-                person=target_person,
-                role=person_data['role'])
+                    id=uuid.uuid4(),
+                    task=target_task,
+                    person=person_data["person"],
+                    role=person_data["role"]
+                )
+
                 db.session.add(task_person)
+            db.session.commit()
         except ValidationError as err:
             db.session.rollback()
-            return UnprocessableEntitySchema().dump (dict (messages=err.messages)), 422 
-        db.session.commit()
-        return SuccessResponseSchema().dump(
-            dict(message='Данные ТЗ успешно добавлены')), 201
+            return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
+        updated_persons = self.model2.query.filter_by(task_id=task_id).all()
+        return jsonify({
+            "task": self.task_schema.dump(target_task),
+            "persons": self.task_person_schema.dump(updated_persons)
+        }), 200
 
 
 class SingleTask(MethodView):
