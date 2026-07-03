@@ -56,7 +56,7 @@ class TaskPersonSchema(SQLAlchemyAutoSchema): #чтение состава ТЗ,
         exclude = ('task', 'person')
 
     id = fields.UUID(dump_only=True)
-    task_id = fields.UUID(required=False, allow_none=True)
+    task_id = fields.UUID(required=True)
     person_id = fields.UUID(required=True)
     role = fields.Str(required=True)
 
@@ -87,6 +87,7 @@ class BadIdResponseSchema(Schema):
 
 class UnprocessableEntitySchema(Schema):
     messages = fields.Dict(fields.Str())
+
 """
 class TechnicalTaskInSchema(Schema): #для десериализации, обработка POST запроса
     title = fields.Str(required=True) #что клиент имеет право присылать

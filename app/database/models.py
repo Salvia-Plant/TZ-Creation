@@ -1,7 +1,7 @@
 from app import db
 from sqlalchemy.dialects.postgresql import UUID 
 import uuid
-from datetime import datetime
+from datetime import date
 
 class TechnicalTask(db.Model):
     """основная сущность"""
@@ -20,21 +20,21 @@ class TechnicalTask(db.Model):
     deleting_author_id = db.Column(UUID(as_uuid=True), db.ForeignKey('person_info.id', ondelete='SET NULL'))
     deleting_author = db.relationship('PersonInfo', primaryjoin='TechnicalTask.deleting_author_id == PersonInfo.id',
                 foreign_keys='TechnicalTask.deleting_author_id',passive_deletes=True, doc='Удаливший запись')
-    organization_id = db.Column(UUID(as_uuid=True),db.ForeignKey('organization.id', 
+    organization_ref = db.Column(UUID(as_uuid=True),db.ForeignKey('organization.id', 
                                     ondelete='SET NULL'),doc='id организации') #из мониторинга
     organization = db.relationship('Organization', passive_deletes=True, doc='Организация')
 
-    efo_id = db.Column(UUID(as_uuid=True),db.ForeignKey('equipment.id', 
+    efo_ref = db.Column(UUID(as_uuid=True),db.ForeignKey('equipment.id', 
                                         ondelete='SET NULL'),doc='id ЭФО')#из мониторинга
     efo = db.relationship('Equipment', passive_deletes=True, doc='ЭФО')
     
-    bg_impact = db.Column(db.String(255), doc='Влияние на БГ') #из мониторинга
-    fault_detected_at = db.Column(db.DateTime, doc='Дата обнаружения неисправности')#из мониторинга
-    monitoring_id = db.Column(db.String(255), doc='id записи из Monitoring')#из мониторинга
+    combat_impact = db.Column(db.Boolean, doc='Влияние на боевую готовность') #из мониторинга
+    malfunction_time = db.Column(db.Date, doc='Дата обнаружения неисправности')#из мониторинга
+    measurement_id = db.Column(UUID(as_uuid=True), doc='id записи из Monitoring')#из мониторинга
 
     number = db.Column(db.String(32), doc='Номер ТЗ')
-    created_at = db.Column(db.DateTime, default=datetime.now, doc='Дата создания записи')
-    title = db.Column(db.String(255), nullable=False, doc="Название ТЗ")
+    creation_date = db.Column(db.Date, default=date.today, doc='Дата создания записи')
+    title = db.Column(db.String(255), nullable=True, doc="Название ТЗ")
     status = db.Column(db.String(32), nullable=False, default="INITIALIZED") 
     is_active = db.Column(db.Boolean, nullable = False, default = True, doc = "флаг активной записи") #для текущей версии
     deletion_mark = db.Column(db.Boolean, nullable = False, default = False, server_default = 'false') 

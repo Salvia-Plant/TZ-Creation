@@ -18,7 +18,6 @@ def GetCurrentUserId():
     
 class TaskList(MethodView):
     model = TechnicalTask
-    model2 = TaskPerson
     create_schema = CreateTaskSchema
     task_schema = TechnicalTaskSchema
 
@@ -31,35 +30,20 @@ class TaskList(MethodView):
         if data is None:
             return jsonify({"error": "JSON необходим"}), 400
         try:
-            current_user = GetCurrentUserId()
-            val_data = self.create_schema().load(data, unknown=EXCLUDE) 
-            persons = val_data.pop('persons') #отдельно берём людей, их не надо в technicaltask
-            if not persons:
-                raise ValidationError({'persons': ['Отсутствует список личного состава для создания ТЗ']}) 
-            target_task = self.model(**val_data) # создал ORM-объект
+            val_data = self.create_schema().load(data,unknown=EXCLUDE)
+            target_task = self.model(**val_data)
             target_task.id = uuid.uuid4()
-            target_task.creating_author_id = current_user
-            target_task.status = "INITIALIZED" 
-            #target_task.parent_id = None #потом для перегенерации
+            target_task.status = "INITIALIZED"
             target_task.is_active = True
+            target_task.deletion_mark = False
+            target_task.creating_author_id = None
+
             db.session.add(target_task)
-            # заполняем связующую таблицу людьми
-            for person_data in persons:
-                target_person = PersonInfo.query.get(person_data['person_id'])
-                if not target_person:
-                    raise ValidationError({'person_id': "Человек не найден"})
-                task_person = self.model2(
-                id = uuid.uuid4(),
-                task=target_task,
-                person=target_person,
-                role=person_data['role'])
-                db.session.add(task_person)
+            db.session.commit()
         except ValidationError as err:
             db.session.rollback()
-            return UnprocessableEntitySchema().dump (dict (messages=err.messages)), 422 
-        db.session.commit()
-        return SuccessResponseSchema().dump(
-            dict(message='Данные ТЗ успешно добавлены')), 201
+            return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
+        return jsonify(self.task_schema().dump(target_task)), 201
     
     def delete(self): 
         target_id = request.args.get('id')
