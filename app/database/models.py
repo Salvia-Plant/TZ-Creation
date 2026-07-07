@@ -20,13 +20,9 @@ class TechnicalTask(db.Model):
     deleting_author_id = db.Column(UUID(as_uuid=True), db.ForeignKey('person_info.id', ondelete='SET NULL'))
     deleting_author = db.relationship('PersonInfo', primaryjoin='TechnicalTask.deleting_author_id == PersonInfo.id',
                 foreign_keys='TechnicalTask.deleting_author_id',passive_deletes=True, doc='Удаливший запись')
-    organization_ref = db.Column(UUID(as_uuid=True),db.ForeignKey('organization.id', 
-                                    ondelete='SET NULL'),doc='id организации') #из мониторинга
-    organization = db.relationship('Organization', passive_deletes=True, doc='Организация')
+    organization_ref = db.Column(UUID(as_uuid=True),doc='id организации') #из мониторинга
 
-    efo_ref = db.Column(UUID(as_uuid=True),db.ForeignKey('equipment.id', 
-                                        ondelete='SET NULL'),doc='id ЭФО')#из мониторинга
-    efo = db.relationship('Equipment', passive_deletes=True, doc='ЭФО')
+    efo_ref = db.Column(UUID(as_uuid=True),doc='id ЭФО')#из мониторинга
     
     combat_impact = db.Column(db.Boolean, doc='Влияние на боевую готовность') #из мониторинга
     malfunction_time = db.Column(db.Date, doc='Дата обнаружения неисправности')#из мониторинга
@@ -34,7 +30,6 @@ class TechnicalTask(db.Model):
 
     number = db.Column(db.String(32), doc='Номер ТЗ')
     creation_date = db.Column(db.Date, default=date.today, doc='Дата создания записи')
-    title = db.Column(db.String(255), nullable=True, doc="Название ТЗ")
     status = db.Column(db.String(32), nullable=False, default="INITIALIZED") 
     is_active = db.Column(db.Boolean, nullable = False, default = True, doc = "флаг активной записи") #для текущей версии
     deletion_mark = db.Column(db.Boolean, nullable = False, default = False, server_default = 'false') 
@@ -71,9 +66,7 @@ class PersonInfo(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
 
-    organization_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organization.id',
-                            ondelete='SET NULL')) #Если организация меняется, человек как запись может остаться.
-    organization = db.relationship('Organization',passive_deletes=True, doc='Войсковая часть')
+    organization_id = db.Column(UUID(as_uuid=True)) #Если организация меняется, человек как запись может остаться.
     
     department = db.Column(db.String(255), doc='Подразделение')
     position = db.Column(db.String(255), doc='Должность')

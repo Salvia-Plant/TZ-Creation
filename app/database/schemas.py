@@ -36,7 +36,7 @@ class PersonInfoSchema(SQLAlchemyAutoSchema):
 class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа 
     class Meta:
         model = TechnicalTask
-        exclude = ('creating_author', 'deleting_author', 'organization', 'efo')
+        exclude = ('creating_author', 'deleting_author')
 
     id = fields.UUID(dump_only=True)
     parent_id = fields.UUID(required=False, allow_none=True)
@@ -68,7 +68,6 @@ class PersonRoleSchema(Schema): #отдельная схема для людей
     role = fields.Str(required=True)
 
 class TaskUpdateSchema(Schema):
-    title = fields.Str(required=True)
     persons=fields.Nested(PersonRoleSchema, many=True, required=True)
     
 class CreateTaskSchema(Schema):

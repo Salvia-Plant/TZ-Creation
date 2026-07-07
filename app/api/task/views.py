@@ -58,11 +58,9 @@ class TaskList(MethodView):
     
 class TaskUpdate(MethodView):
     model = TechnicalTask
-    person_model = PersonInfo
     model2 = TaskPerson
-    update_schema = TaskUpdateSchema()
-    task_schema = TechnicalTaskSchema()
-    task_person_schema = TaskPersonSchema(many=True)
+    update_schema = TaskUpdateSchema
+    task_schema = TechnicalTaskSchema
 
     def put(self, task_id):
         data = request.get_json()
@@ -80,7 +78,7 @@ class TaskUpdate(MethodView):
             #         {"person_id": "...", "role": "..."}
             #     ]
             # }
-            val_data = self.update_schema.load(data,unknown=EXCLUDE)
+            val_data = self.update_schema().load(data,unknown=EXCLUDE)
             persons = val_data["persons"]
             if not persons:
                 raise ValidationError({"persons": ["Список личного состава не может быть пустым"]})
@@ -88,7 +86,7 @@ class TaskUpdate(MethodView):
             # Пока ничего в БД не удаляем и не создаём.
             validated_persons = []
             for person_data in persons:
-                target_person = self.person_model.query.get(person_data["person_id"])
+                target_person = PersonInfo.query.get(person_data["person_id"])
                 if not target_person:
                     raise ValidationError({
                         "persons": [
@@ -116,7 +114,6 @@ class TaskUpdate(MethodView):
                     person=person_data["person"],
                     role=person_data["role"]
                 )
-
                 db.session.add(task_person)
             db.session.commit()
         except ValidationError as err:
@@ -124,8 +121,8 @@ class TaskUpdate(MethodView):
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
         updated_persons = self.model2.query.filter_by(task_id=task_id).all()
         return jsonify({
-            "task": self.task_schema.dump(target_task),
-            "persons": self.task_person_schema.dump(updated_persons)
+            "task": self.task_schema().dump(target_task),
+            "persons": TaskPersonSchema(many=True).dump(updated_persons)
         }), 200
 
 
@@ -191,3 +188,4 @@ class TaskRegenerate(MethodView):
             return jsonify({"error":"ТЗ не найдено"}), 404
         
         return jsonify({"message": "Перегенерация ТЗ запущена"}), 200
+    
