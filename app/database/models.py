@@ -30,7 +30,7 @@ class TechnicalTask(db.Model):
 
     number = db.Column(db.String(32), doc='Номер ТЗ')
     creation_date = db.Column(db.Date, default=date.today, doc='Дата создания записи')
-    status = db.Column(db.String(32), nullable=False, default="INITIALIZED") 
+    status = db.Column(db.String(32), nullable=False) 
     is_active = db.Column(db.Boolean, nullable = False, default = True, doc = "флаг активной записи") #для текущей версии
     deletion_mark = db.Column(db.Boolean, nullable = False, default = False, server_default = 'false') 
 

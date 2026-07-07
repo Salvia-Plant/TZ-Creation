@@ -31,7 +31,6 @@ class PersonInfoSchema(SQLAlchemyAutoSchema):
     position = fields.Str(required=False, allow_none=True)
     rank = fields.Str(required=False, allow_none=True)
     full_name = fields.Str(required=False, allow_none=True)
-    status = fields.Str(required=False, allow_none=True)
 
 class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа 
     class Meta:
@@ -42,12 +41,12 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     parent_id = fields.UUID(required=False, allow_none=True)
     creating_author_id = fields.UUID(required=False, allow_none=True)
     deleting_author_id = fields.UUID(required=False, allow_none=True)
-    organization_id = fields.UUID(required=False, allow_none=True)
-    efo_id = fields.UUID(required=False, allow_none=True)
-    bg_impact = fields.Str(required=False, allow_none=True)
-    fault_detected_at = fields.DateTime(required=False, allow_none=True)
-    monitoring_id = fields.Str(required=False, allow_none=True)
-    created_at = fields.DateTime(dump_only=True)
+    organization_ref = fields.UUID(required=False, allow_none=True)
+    efo_ref = fields.UUID(required=False, allow_none=True)
+    combat_impact = fields.Str(required=False, allow_none=True)
+    malfunction_time = fields.DateTime(required=False, allow_none=True)
+    measurement_id = fields.Str(required=False, allow_none=True)
+    creation_date = fields.DateTime(dump_only=True)
     number = fields.Str(dump_only=True)
     status = fields.Str(dump_only=True)
     is_active = fields.Boolean(dump_only=True)
