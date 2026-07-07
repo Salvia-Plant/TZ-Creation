@@ -79,6 +79,8 @@ class TaskUpdate(MethodView):
             #     ]
             # }
             val_data = self.update_schema().load(data,unknown=EXCLUDE)
+            number = val_data["number"]
+            target_task.number = number
             persons = val_data["persons"]
             if not persons:
                 raise ValidationError({"persons": ["Список личного состава не может быть пустым"]})
@@ -98,14 +100,13 @@ class TaskUpdate(MethodView):
                     "person": target_person,
                     "role": person_data["role"]
                 })
-            # Автором считаем пользователя, который впервые
-            # дозаполнил созданную Monitoring запись.
-            current_user = GetCurrentUserId()
-            if target_task.creating_author_id is None:
-                target_task.creating_author_id = current_user
-            # PUT передаёт полное новое состояние личного состава,
-            # поэтому прежние связи удаляем.
-            self.model2.query.filter_by(task_id=task_id).delete(synchronize_session=False)
+            # Автором считаем пользователя, который впервые дозаполнил созданную Monitoring запись.
+            #current_user = GetCurrentUserId()
+            #if target_task.creating_author_id is None:
+            #    target_task.creating_author_id = current_user
+
+            # PUT передаёт полное новое состояние личного состава, поэтому прежние связи удаляем.
+            #self.model2.query.filter_by(task_id=task_id).delete(synchronize_session=False)
             # Создаём новый состав.
             for person_data in validated_persons:
                 task_person = self.model2(

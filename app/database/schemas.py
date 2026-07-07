@@ -45,8 +45,8 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     efo_ref = fields.UUID(required=False, allow_none=True)
     combat_impact = fields.Str(required=False, allow_none=True)
     malfunction_time = fields.DateTime(required=False, allow_none=True)
-    measurement_id = fields.Str(required=False, allow_none=True)
-    creation_date = fields.DateTime(dump_only=True)
+    measurement_id = fields.Int(required=False, allow_none=True)
+    creation_date = fields.Date(dump_only=True)
     number = fields.Str(dump_only=True)
     status = fields.Str(dump_only=True)
     is_active = fields.Boolean(dump_only=True)
@@ -70,8 +70,8 @@ class TaskUpdateSchema(Schema):
     persons=fields.Nested(PersonRoleSchema, many=True, required=True)
     
 class CreateTaskSchema(Schema):
-    malfunction_time = fields.Date(required=True)
-    measurement_id = fields.UUID(required=True)
+    malfunction_time = fields.DateTime(required=True)
+    measurement_id = fields.Int(required=True)
     organization_ref = fields.UUID(required=True)
     efo_ref = fields.UUID(required=True)
     combat_impact = fields.Boolean(required=False, allow_none=True)
