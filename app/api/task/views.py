@@ -129,13 +129,17 @@ class TaskUpdate(MethodView):
 
 class SingleTask(MethodView):
     model = TechnicalTask
+    model2 = TaskPerson
     schema = TechnicalTaskSchema
 
     def get(self, task_id):
         task = self.model.query.get(task_id)
         if not task or task.deletion_mark:
             return jsonify({"error":"ТЗ не найдено"}), 404
-        return jsonify({'TechnicalTask': self.schema().dump(task)})
+        persons = self.model2.query.filter_by(task_id=task_id).all()
+        return jsonify({'TechnicalTask': self.schema().dump(task),
+                        "persons": TaskPersonSchema(many=True).dump(persons)
+                        })
     
 class Statuses(MethodView):
     """отдельная ручка для получения списка статусов. для фронта"""

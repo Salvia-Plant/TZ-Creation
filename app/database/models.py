@@ -20,9 +20,11 @@ class TechnicalTask(db.Model):
     deleting_author_id = db.Column(UUID(as_uuid=True), db.ForeignKey('person_info.id', ondelete='SET NULL'))
     deleting_author = db.relationship('PersonInfo', primaryjoin='TechnicalTask.deleting_author_id == PersonInfo.id',
                 foreign_keys='TechnicalTask.deleting_author_id',passive_deletes=True, doc='Удаливший запись')
-    organization_ref = db.Column(UUID(as_uuid=True),doc='id организации') #из мониторинга
+    organization_ref = db.Column(UUID(as_uuid=True),db.ForeignKey('organization.id', ondelete='CASCADE'), doc='id организации') #из мониторинга
+    organization = db.relationship('Organization', passive_deletes=True)
 
-    efo_ref = db.Column(UUID(as_uuid=True),doc='id ЭФО')#из мониторинга
+    efo_ref = db.Column(UUID(as_uuid=True),db.ForeignKey('equipment.id', ondelete='CASCADE'), doc='id ЭФО')#из мониторинга
+    efo = db.relationship('Equipment', passive_deletes=True)
     
     combat_impact = db.Column(db.Boolean, doc='Влияние на боевую готовность') #из мониторинга
     malfunction_time = db.Column(db.DateTime, doc='Дата обнаружения неисправности')#из мониторинга
@@ -55,6 +57,7 @@ class Equipment(db.Model):
     __tablename__ = "equipment"
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
+    parent_id = db.Column(UUID(as_uuid=True), doc='id родителя')
     equipment_name = db.Column(db.String(255), nullable=False, doc="Наименование оборудования")
     #technical_tasks = db.relationship("TechnicalTask", back_populates="equipment",passive_deletes=True)
 
