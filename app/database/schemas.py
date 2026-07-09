@@ -20,6 +20,22 @@ class EquipmentSchema(SQLAlchemyAutoSchema):
 
     id = fields.UUID(required=True)
     equipment_name = fields.Str(required=True)
+    esi_id = fields.UUID(required=True)
+    from_designation = fields.Str(dump_only=True)
+    factory_number = fields.Str(dump_only=True)
+
+    children = fields.Nested('OrganizationSchema', many=True, dump_only=False)
+ 
+class PersonInfoLoadSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = PersonInfo
+    
+    id = fields.UUID(required=True, data_key='Ref', load_only=True)
+    organization_id = fields.UUID(required=False, data_key='organization_ref',allow_none=True)
+    department = fields.Str(required=False, data_key='subdivision_description',allow_none=True)
+    full_name = fields.Str(required=False, allow_none=True)
+    position = fields.Str(required=False, data_key='position_description', load_only=True)
+    rank = fields.Str(required=True, data_key='rank_description', load_only=True)
 
 class PersonInfoSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -27,6 +43,7 @@ class PersonInfoSchema(SQLAlchemyAutoSchema):
 
     id = fields.UUID(required=True)
     organization_id = fields.UUID(required=False, allow_none=True)
+    organization = fields.Pluck('OrganizationSchema','org_title',dump_only=True)
     department = fields.Str(required=False, allow_none=True)
     position = fields.Str(required=False, allow_none=True)
     rank = fields.Str(required=False, allow_none=True)
@@ -42,6 +59,8 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     creating_author_id = fields.UUID(required=False, allow_none=True)
     deleting_author_id = fields.UUID(required=False, allow_none=True)
     organization_ref = fields.UUID(required=False, allow_none=True)
+    organization = fields.Pluck('OrganizationSchema','org_title',dump_only=True)
+    efo = fields.Pluck('EquipmentSchema','equipment_name',dump_only=True)
     efo_ref = fields.UUID(required=False, allow_none=True)
     combat_impact = fields.Str(required=False, allow_none=True)
     malfunction_time = fields.DateTime(required=False, allow_none=True)
@@ -68,6 +87,7 @@ class PersonRoleSchema(Schema): #отдельная схема для людей
 
 class TaskUpdateSchema(Schema):
     persons=fields.Nested(PersonRoleSchema, many=True, required=True)
+    number = fields.Str()
     
 class CreateTaskSchema(Schema):
     malfunction_time = fields.DateTime(required=True)
