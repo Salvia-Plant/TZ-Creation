@@ -52,7 +52,7 @@ class Organization(db.Model):
   
 
 class Equipment(db.Model):
-    """Оборудование, ЭФО"""
+    """Название оборудования (ЭФО)"""
 
     __tablename__ = "equipment"
 
@@ -60,6 +60,12 @@ class Equipment(db.Model):
     parent_id = db.Column(UUID(as_uuid=True), doc='id родителя')
     equipment_name = db.Column(db.String(255), nullable=False, doc="Наименование оборудования")
     #technical_tasks = db.relationship("TechnicalTask", back_populates="equipment",passive_deletes=True)
+    from_designation = db.Column(db.String(255), doc='обозначение формуляра')
+    factory_number = db.Column(db.String(255), default=-1, doc = 'Заводской № продукта')
+    esi_id = db.Column(UUID(as_uuid=True), doc='Ссылка на объект из ЭСИ')
+
+    children = db.relationship('Equipment', primaryjoin=parent_id == id, foreign_keys=id,
+                               remote_side=parent_id, uselist=True)
 
 
 class PersonInfo(db.Model):
@@ -69,12 +75,14 @@ class PersonInfo(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
 
-    organization_id = db.Column(UUID(as_uuid=True)) #Если организация меняется, человек как запись может остаться.
-    
+    organization_id = db.Column(UUID(as_uuid=True), db.ForeignKey('organization.id', ondelete='SET NULL')) #Если организация меняется, человек как запись может остаться.
+    organization = db.relationship('Organization', passive_deletes = True, doc='Войсковая часть')
     department = db.Column(db.String(255), doc='Подразделение')
     position = db.Column(db.String(255), doc='Должность')
     rank = db.Column(db.String(255), doc='Звание')
     full_name = db.Column(db.String(255), doc='Фамилия Имя Отчество')
+    is_active = db.Column(db.Boolean, default = True, doc = 'Флаг активной записи для ЛС')
+
 
 
 class TaskPerson(db.Model):

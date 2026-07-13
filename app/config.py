@@ -1,7 +1,7 @@
 import os
 
 class AppConfig:
- DB_USER = os.getenv("DB_USER", "flask_user")
+ DB_USER = os.getenv("DB_USER", "postgres")
  DB_PASSWORD = os.getenv("DB_PASSWORD", "")  # засекретили пароль, он в дотенв, который в гитигноре
  #DB_SERVER = 'ksue-db.service.consul:5432'
  DB_SERVER = os.getenv("DB_SERVER", "127.0.0.1:5432")
