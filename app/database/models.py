@@ -28,7 +28,7 @@ class TechnicalTask(db.Model):
     
     combat_impact = db.Column(db.Boolean, doc='Влияние на боевую готовность') #из мониторинга
     malfunction_time = db.Column(db.DateTime, doc='Дата обнаружения неисправности')#из мониторинга
-    measurement_id = db.Column(UUID(as_uuid=True), doc='id записи из Monitoring')#из мониторинга
+    measurement_id = db.Column(db.Integer, doc='id записи из Monitoring')#из мониторинга
 
     number = db.Column(db.String(32), doc='Номер ТЗ')
     creation_date = db.Column(db.Date, default=date.today, doc='Дата создания записи')

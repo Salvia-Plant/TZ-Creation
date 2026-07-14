@@ -99,6 +99,7 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
+            compare_types= True,
             target_metadata=get_metadata(),
             **conf_args
         )
