@@ -39,6 +39,5 @@ def CanChangeStatus(current_status, new_status): #булевое
     if current_status == new_status: #при отправл одного и того же статуса ничего не меняю, отправляю 200 ОК
         return True
     status = GetStatusByValue(current_status)
-    #if not status:
-    #   return False # на случай если в БД битый статус (но хз как такое возможно, я всё проверяю, что в БД кладу)
+    if not status: return False # на случай если в БД битый статус (но хз как такое возможно, я всё проверяю, что в БД кладу)
     return new_status in status["toStates"]

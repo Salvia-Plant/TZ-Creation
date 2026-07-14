@@ -24,7 +24,7 @@ class EquipmentSchema(SQLAlchemyAutoSchema):
     from_designation = fields.Str(dump_only=True)
     factory_number = fields.Str(dump_only=True)
 
-    children = fields.Nested('OrganizationSchema', many=True, dump_only=False)
+    children = fields.Nested('EquipmentSchema', many=True, dump_only=False)
  
 class PersonInfoLoadSchema(SQLAlchemyAutoSchema):
     class Meta:

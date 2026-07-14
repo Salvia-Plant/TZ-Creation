@@ -25,7 +25,7 @@ class OrganizationFromParserSchema(SQLAlchemyAutoSchema):
     parent_id = fields.UUID(required=False,data_key='Parent',allow_none=True,load_only=True)
     org_title = fields.Str(required=True,data_key='Description',load_only=True)
 
-    @pre_load(pass_many=True)
+    @pre_load(pass_collection=True)
     def prepare_parent_organization(self, data, **kwargs):
         for organization in data:
             if organization.get('Parent') == EMPTY_UUID:
@@ -48,7 +48,7 @@ class EfoFromParserSchema(SQLAlchemyAutoSchema):
     factory_number = fields.Str(required=False,data_key='ZavodskoyNomerIzdeliyal',allow_none=True,load_only=True)
     esi_id = fields.UUID(required=False,data_key='ZavodskoyNomerIsdeliya',allow_none=True,load_only=True )
    
-    @pre_load(pass_many=True)
+    @pre_load(pass_collection=True)
     def prepare_fks(self, data, **kwargs):
         for product in data:
             for key in (
