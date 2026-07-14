@@ -8,7 +8,7 @@ class AppConfig:
  DB_NAME = os.getenv("DB_NAME", "flask_db")
  MAX_CONTENT_LENGTH = 50 * 1000 * 1000
  #PARSER_ADDRESS = 'panda-back.service.consul:8765'
- #PARSER_ADDRESS = '192.168.74.68:8765'
+ PARSER_ADDRESS = '192.168.74.68:8765'
  SQLALCHEMY_TRACK_MODIFICATIONS = False
 
  @property

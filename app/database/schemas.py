@@ -62,7 +62,7 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     organization = fields.Pluck('OrganizationSchema','org_title',dump_only=True)
     efo = fields.Pluck('EquipmentSchema','equipment_name',dump_only=True)
     efo_ref = fields.UUID(required=False, allow_none=True)
-    combat_impact = fields.Str(required=False, allow_none=True)
+    combat_impact = fields.Boolean(required=False, allow_none=True)
     malfunction_time = fields.DateTime(required=False, allow_none=True)
     measurement_id = fields.Int(required=False, allow_none=True)
     creation_date = fields.Date(dump_only=True)
