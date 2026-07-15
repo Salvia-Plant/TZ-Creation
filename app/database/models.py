@@ -85,8 +85,9 @@ class PersonInfo(db.Model):
 
 
 
-class TaskPerson(db.Model):
+class TaskPerson(db.Model): #Какой человек в каком ТЗ в какой роли участвует?
     """Личный состав для создания ТЗ"""
+
     __tablename__ = 'task_person'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True)
@@ -98,9 +99,20 @@ class TaskPerson(db.Model):
                           nullable=False, doc='id человека')
     person = db.relationship('PersonInfo', passive_deletes=True, doc='Человек')
 
-    role = db.Column(db.String(64), nullable=False, doc='роль человека в ТЗ')
-    
-    
+    role_id = db.Column(UUID(as_uuid=True),db.ForeignKey('role_info.id', 
+                            ondelete='RESTRICT'),doc='id роли')
+    role = db.relationship('RoleInfo', passive_deletes = True, doc='роль')
+
+
+class RoleInfo(db.Model):
+    """Роли для личного состава в ТЗ"""
+
+    __tablename__ = 'role_info'
+
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    name = db.Column(db.String(255), nullable=False, doc='Наименование Роли')
+    code = db.Column(db.String(64), nullable=False, unique=True, doc='Код роли') # для нас с катей
 
 
 

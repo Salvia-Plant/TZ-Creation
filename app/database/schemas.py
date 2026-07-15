@@ -71,19 +71,26 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     is_active = fields.Boolean(dump_only=True)
     deletion_mark = fields.Boolean(dump_only=True)
 
-class TaskPersonSchema(SQLAlchemyAutoSchema): #чтение состава ТЗ, отдача связей ТЗ -люди, потенциально сериализация этих записей
+class TaskPersonSchema(SQLAlchemyAutoSchema):
+    """Для связей человек-ТЗ-роль"""
     class Meta:
         model = TaskPerson
-        exclude = ('task', 'person')
+        exclude = ('task', 'person', 'role')
 
     id = fields.UUID(dump_only=True)
-    task_id = fields.UUID(required=True)
+    task_id = fields.UUID(required=False, allow_none=True)
     person_id = fields.UUID(required=True)
-    role = fields.Str(required=True)
+    role_id = fields.UUID(required=True)
 
-class PersonRoleSchema(Schema): #отдельная схема для людей (для загрузки), т.к нужно знать кого выбрали и в какой роли
+    role_name = fields.Pluck('RoleInfoSchema','name',attribute='role',dump_only=True)
+    role_code = fields.Pluck('RoleInfoSchema','code',attribute='role',dump_only=True)
+
+    #person_name = fields.Pluck('PersonInfoSchema','full_name',attribute='person',dump_only=True)
+
+class PersonRoleSchema(Schema):
+    """Выбранный человек и его роль в ТЗ"""
     person_id = fields.UUID(required=True)
-    role = fields.Str(required=True)
+    role_id = fields.UUID(required=True)
 
 class TaskUpdateSchema(Schema):
     persons=fields.Nested(PersonRoleSchema, many=True, required=True)
@@ -96,6 +103,14 @@ class CreateTaskSchema(Schema):
     efo_ref = fields.UUID(required=True)
     combat_impact = fields.Boolean(required=False, allow_none=True)
 
+class RoleInfoSchema(SQLAlchemyAutoSchema): 
+    """Справочник ролей ЛС для ТЗ"""
+    class Meta:
+        model = RoleInfo
+
+    id = fields.UUID()
+    name = fields.Str(required=True)
+    code = fields.Str(required=True) #для нас с Катей
 
 class StatusSchema(Schema):
     status = fields.Str(required=True)
