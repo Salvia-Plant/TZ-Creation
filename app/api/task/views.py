@@ -172,10 +172,7 @@ class TaskStatus(MethodView):
                 }), 400 #если нет такого статуса
             if not CanChangeStatus(current_status, new_status): 
                 return jsonify({
-                    "error": "Недопустимый переход статуса",
-                    "current_status": current_status,
-                    "new_status": new_status
-                }), 400  #нельзя из текущего состояния перейти в указанный статус
+                    "error": "Недопустимый переход статуса",}), 400  #нельзя из текущего состояния перейти в указанный статус
             task.status = new_status #присваиваем новое значение орм объекту
         except ValidationError as err:
             db.session.rollback()

@@ -3,8 +3,8 @@ from flask.views import MethodView
 from marshmallow import ValidationError, EXCLUDE
 
 from app import db
-from app.database.models import PersonInfo, Organization, Equipment
-from app.database.schemas import OrganizationSchema, EquipmentSchema,PersonInfoSchema,\
+from app.database.models import PersonInfo, Organization, Equipment, RoleInfo
+from app.database.schemas import OrganizationSchema, EquipmentSchema,PersonInfoSchema,RoleInfoSchema,\
     PersonInfoLoadSchema, SuccessResponseSchema,UnprocessableEntitySchema,BadIdResponseSchema
 
 
@@ -81,3 +81,12 @@ class CatalogEquipment(MethodView):
     def get():
         equipment = Equipment.query.filter(Equipment.parent_id.is_(None)).all()
         return jsonify(EquipmentSchema(many=True).dump(equipment)), 200
+    
+
+class CatalogRoles(MethodView):
+    model = RoleInfo
+    schema = RoleInfoSchema
+
+    def get(self):
+        roles = self.model.query.get().all()
+        return jsonify(self.schema(many=True).dump(roles)), 200
