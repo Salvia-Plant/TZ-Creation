@@ -2,6 +2,7 @@ from flask import jsonify, request
 from flask.views import MethodView
 from marshmallow import ValidationError, EXCLUDE
 import uuid
+from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
@@ -31,6 +32,10 @@ class TaskList(MethodView):
             return jsonify({"error": "JSON необходим"}), 400
         try:
             val_data = self.create_schema().load(data,unknown=EXCLUDE)
+
+            task = self.model.query.filter_by(measurement_id=val_data["measurement_id"]).first()
+            if task:
+                return jsonify({"error": "ТЗ с таким measurement_id уже существует",}), 409
             target_task = self.model(**val_data)
             target_task.id = uuid.uuid4()
             target_task.status = "INITIALIZED"
@@ -43,6 +48,9 @@ class TaskList(MethodView):
         except ValidationError as err:
             db.session.rollback()
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({"error": "Уже существует ТЗ по данной неисправности"}), 409
         return jsonify(self.task_schema().dump(target_task)), 201
     
     def delete(self): 

@@ -83,10 +83,6 @@ class CatalogEquipment(MethodView):
         return jsonify(EquipmentSchema(many=True).dump(equipment)), 200
     
 
-class CatalogRoles(MethodView):
+class CatalogRoles(MethodView, CatalogMixin):
     model = RoleInfo
-    schema = RoleInfoSchema
-
-    def get(self):
-        roles = self.model.query.get().all()
-        return jsonify(self.schema(many=True).dump(roles)), 200
+    dump_schema = RoleInfoSchema
