@@ -82,7 +82,13 @@ class CatalogEquipment(MethodView):
         equipment = Equipment.query.filter(Equipment.parent_id.is_(None)).all()
         return jsonify(EquipmentSchema(many=True).dump(equipment)), 200
     
-
+class CatalogRoles(MethodView):
+    @staticmethod
+    def get():
+        roles = RoleInfo.query.all()
+        return jsonify(RoleInfoSchema(many=True).dump(roles)), 200
+"""
 class CatalogRoles(MethodView, CatalogMixin):
     model = RoleInfo
     dump_schema = RoleInfoSchema
+"""
