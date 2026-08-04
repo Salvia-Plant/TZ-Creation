@@ -2,6 +2,7 @@ from marshmallow import Schema, fields, EXCLUDE, post_load, pre_load, validate
 from .models import *
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from .models import TechnicalTask, Organization, Equipment, PersonInfo, TaskPerson
+from datetime import datetime
 
 class OrganizationSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -63,7 +64,7 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     efo = fields.Pluck('EquipmentSchema','equipment_name',dump_only=True)
     efo_ref = fields.UUID(required=False, allow_none=True)
     combat_impact = fields.Boolean(required=False, allow_none=True)
-    malfunction_time = fields.DateTime(required=False, allow_none=True)
+    malfunction_time = fields.DateTime(format='%d.%m.%YT%H:%M:%S',required=False, allow_none=True)
     measurement_id = fields.Int(required=False, allow_none=True)
     creation_date = fields.Date(dump_only=True)
     number = fields.Str(dump_only=True)
@@ -88,7 +89,7 @@ class TaskPersonSchema(SQLAlchemyAutoSchema):
     #person_name = fields.Pluck('PersonInfoSchema','full_name',attribute='person',dump_only=True)
 
 class PersonRoleSchema(Schema):
-    """Выбранный человек и его роль в ТЗ"""
+    """Выбранный человек и его роль в ТЗ, для входных данных"""
     person_id = fields.UUID(required=True)
     role_id = fields.UUID(required=True)
 
