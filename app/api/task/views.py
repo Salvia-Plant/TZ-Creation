@@ -107,10 +107,6 @@ class TaskUpdate(MethodView):
                     "person": target_person,
                     "role": person_data["role"]
                 })
-            # Автором считаем пользователя, который впервые дозаполнил созданную Monitoring запись.
-            #current_user = GetCurrentUserId()
-            #if target_task.creating_author_id is None:
-            #    target_task.creating_author_id = current_user
 
             # PUT передаёт полное новое состояние личного состава, поэтому прежние связи удаляем.
             #self.model2.query.filter_by(task_id=task_id).delete(synchronize_session=False)
