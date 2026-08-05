@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
+from app.api.task.roles import ROLES
 from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TaskPerson
 from app.database.schemas import OrganizationSchema,EquipmentSchema, TaskUpdateSchema, \
  PersonInfoSchema,TechnicalTaskSchema, TaskPersonSchema, PersonRoleSchema,  StatusSchema,\
@@ -79,12 +80,6 @@ class TaskUpdate(MethodView):
         if target_task is None or target_task.deletion_mark:
             return jsonify({"error": "ТЗ не найдено"}), 404
         try:
-            # Валидируем payload:
-            # {
-            #     "persons": [
-            #         {"person_id": "...", "role": "..."}
-            #     ]
-            # }
             val_data = self.update_schema().load(data,unknown=EXCLUDE)
             number = val_data["number"]
             target_task.number = number

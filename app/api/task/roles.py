@@ -1,4 +1,4 @@
-ROLE_INFO = [
+ROLES = [
     {
         "code": "leader",
         "name": "Руководитель",
@@ -25,3 +25,11 @@ ROLE_INFO = [
         "is_multiple": True,
     },
 ]
+"""
+def IsMultiple(code):
+    for role in ROLES:
+        if role["code"] == code:
+            return role["is_multiple"]
+
+    return False
+"""
