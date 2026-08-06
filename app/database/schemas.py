@@ -85,17 +85,29 @@ class TaskPersonSchema(SQLAlchemyAutoSchema):
 
     role_name = fields.Pluck('RoleInfoSchema','name',attribute='role',dump_only=True)
     role_code = fields.Pluck('RoleInfoSchema','code',attribute='role',dump_only=True)
+    person_name = fields.Pluck('PersonInfoSchema','full_name',attribute='person',dump_only=True)
 
-    #person_name = fields.Pluck('PersonInfoSchema','full_name',attribute='person',dump_only=True)
-
+"""
 class PersonRoleSchema(Schema):
-    """Выбранный человек и его роль в ТЗ, для входных данных"""
+    #Выбранный человек и его роль в ТЗ, для входных данных
     person_id = fields.UUID(required=True)
     role_id = fields.UUID(required=True)
+
 
 class TaskUpdateSchema(Schema):
     persons=fields.Nested(PersonRoleSchema, many=True, required=True)
     number = fields.Str()
+"""
+
+class TaskUpdateSchema(Schema):
+    number = fields.Str(required=False)
+
+    leader = fields.UUID(required=False, allow_none=True)
+    special_service_officer = fields.UUID(required=False, allow_none=True)
+    data_preparation_officer = fields.UUID(required=False, allow_none=True)
+    support_officer = fields.UUID(required=False, allow_none=True)
+
+    field_team = fields.List(fields.UUID(),required=False)
     
 class CreateTaskSchema(Schema):
     malfunction_time = fields.DateTime(required=True)
@@ -112,6 +124,7 @@ class RoleInfoSchema(SQLAlchemyAutoSchema):
     id = fields.UUID()
     name = fields.Str(required=True)
     code = fields.Str(required=True) #для нас с Катей
+    is_multiple = fields.Boolean()
 
 class StatusSchema(Schema):
     status = fields.Str(required=True)

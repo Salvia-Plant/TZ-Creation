@@ -7,9 +7,9 @@ from sqlalchemy.exc import IntegrityError
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
 from app.api.task.roles import ROLES
-from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TaskPerson
+from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TaskPerson, RoleInfo
 from app.database.schemas import OrganizationSchema,EquipmentSchema, TaskUpdateSchema, \
- PersonInfoSchema,TechnicalTaskSchema, TaskPersonSchema, PersonRoleSchema,  StatusSchema,\
+ PersonInfoSchema,TechnicalTaskSchema, TaskPersonSchema, StatusSchema,\
     CreateTaskSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema\
 
 def GetCurrentUserId():
@@ -63,7 +63,86 @@ class TaskList(MethodView):
         target_task.deleting_author_id = current_user
         db.session.commit()
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
-    
+
+
+class TaskUpdate(MethodView):
+    model = TechnicalTask
+    model2 = TaskPerson
+    update_schema = TaskUpdateSchema
+    task_schema = TechnicalTaskSchema
+
+    def put(self, task_id):
+        data = request.get_json()
+        if data is None:
+            return jsonify({"error": "JSON необходим"}), 400
+        target_task = self.model.query.get(task_id)
+        if target_task is None or target_task.deletion_mark:
+            return jsonify({"error": "ТЗ не найдено"}), 404
+        try:
+            val_data = self.update_schema().load(data,unknown=EXCLUDE)
+            if "number" in val_data:
+                target_task.number = val_data["number"]
+            roles = RoleInfo.query.all()
+            #сюда складываем уже проверенных людей и их роли, пока ничего в БД не удаляем и не создаём.
+            validated_persons = []
+            for role in roles:
+                role_code = role.code
+                value_from_request = val_data.get(role_code)
+                if value_from_request is not None:
+                    if role.is_multiple:
+                        person_ids = value_from_request
+                    else:
+                        person_ids = [value_from_request]
+                    for person_id in person_ids:
+                        target_person = PersonInfo.query.get(person_id)
+                        if not target_person:
+                            raise ValidationError({role_code: [f'Человек с id {person_id} не найден']})
+                        validated_persons.append({
+                            "person": target_person,
+                            "role": role
+                        })
+            if not validated_persons:
+                raise ValidationError({"personnel": ["Личный состав не может быть пустым"]})
+            # Проверяем, что один и тот же человек
+            # не указан два раза в одной и той же роли.
+            checked_person_roles = []
+
+            for person_data in validated_persons:
+                person_role_pair = (
+                    person_data["person"].id,
+                    person_data["role"].id
+                )
+
+                if person_role_pair in checked_person_roles:
+                    raise ValidationError({
+                        "personnel": [
+                            "Один и тот же человек не должен повторяться в одной и той же роли"
+                        ]
+                    })
+
+                checked_person_roles.append(person_role_pair)
+            # PUT передаёт полное новое состояние личного состава.
+            # Поэтому удаляем старые связи этого ТЗ с людьми и ролями.
+            self.model2.query.filter_by(task_id=task_id).delete(synchronize_session=False)
+            # Создаём новый актуальный состав личного состава.
+            for person_data in validated_persons:
+                task_person = self.model2(
+                    id=uuid.uuid4(),
+                    task=target_task,
+                    person=person_data["person"],
+                    role=person_data["role"]
+                )
+                db.session.add(task_person)
+            db.session.commit()
+        except ValidationError as err:
+            db.session.rollback()
+            return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
+        updated_persons = self.model2.query.filter_by(task_id=task_id).all()
+        return jsonify({
+            "task": self.task_schema().dump(target_task),
+            "persons": TaskPersonSchema(many=True).dump(updated_persons)
+        }), 200
+"""
 class TaskUpdate(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
@@ -80,7 +159,7 @@ class TaskUpdate(MethodView):
         if target_task is None or target_task.deletion_mark:
             return jsonify({"error": "ТЗ не найдено"}), 404
         try:
-            val_data = self.update_schema().load(data,unknown=EXCLUDE)
+            val_data = self.update_schema().load(data, unknown=EXCLUDE)
             number = val_data["number"]
             target_task.number = number
             persons = val_data["persons"]
@@ -124,7 +203,7 @@ class TaskUpdate(MethodView):
             "persons": TaskPersonSchema(many=True).dump(updated_persons)
         }), 200
 
-
+"""
 class SingleTask(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
