@@ -78,6 +78,67 @@ class TaskUpdate(MethodView):
         if target_task is None or target_task.deletion_mark:
             return jsonify({"error": "ТЗ не найдено"}), 404
         try:
+            val_data = self.update_schema().load(data)
+            target_task.number = val_data["number"]
+            validated_persons = []
+            for role_data in ROLES:
+                role_code = role_data["code"]
+                selected_persons = val_data.get(role_code)
+                if selected_persons is not None:
+                    role = RoleInfo.query.filter_by(code=role_code).first()
+                    if not role:
+                        raise ValidationError({role_code: [f'Роль с code "{role_code}" не найдена в справочнике ролей']})
+                    if role_code == "field_team":
+                        person_ids = selected_persons
+                    else:
+                        person_ids = [selected_persons]
+                    for person_id in person_ids:
+                        target_person = PersonInfo.query.get(person_id)
+                        if not target_person:
+                            raise ValidationError({role_code: [f'Человек с id {person_id} не найден']})
+                        validated_persons.append({
+                            "person": target_person,
+                            "role": role
+                        })
+            if not validated_persons:
+                raise ValidationError({"personnel": ["Личный состав не может быть пустым"]})
+            old_task_persons = self.model2.query.filter_by(task_id=task_id).all()
+            for old_task_person in old_task_persons:
+                db.session.delete(old_task_person)
+            for person_data in validated_persons:
+                task_person = self.model2(
+                    id=uuid.uuid4(),
+                    task=target_task,
+                    person=person_data["person"],
+                    role=person_data["role"]
+                )
+                db.session.add(task_person)
+            db.session.commit()
+        except ValidationError as err:
+            db.session.rollback()
+            return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
+        updated_persons = self.model2.query.filter_by(task_id=task_id).all()
+        return jsonify({
+            "task": self.task_schema().dump(target_task),
+            "persons": TaskPersonSchema(many=True).dump(updated_persons)
+        }), 200
+
+
+"""
+class TaskUpdate(MethodView):
+    model = TechnicalTask
+    model2 = TaskPerson
+    update_schema = TaskUpdateSchema
+    task_schema = TechnicalTaskSchema
+
+    def put(self, task_id):
+        data = request.get_json()
+        if data is None:
+            return jsonify({"error": "JSON необходим"}), 400
+        target_task = self.model.query.get(task_id)
+        if target_task is None or target_task.deletion_mark:
+            return jsonify({"error": "ТЗ не найдено"}), 404
+        try:
             val_data = self.update_schema().load(data,unknown=EXCLUDE)
             number = val_data["number"]
             target_task.number = number
@@ -102,14 +163,13 @@ class TaskUpdate(MethodView):
                         })
             if not validated_persons:
                 raise ValidationError({"personnel": ["Личный состав не может быть пустым"]})
-            # Проверяем, что один и тот же человек
-            # не указан два раза в одной и той же роли.
+            # Проверяем, что один и тот же человек не указан два раза в одной и той же роли.
             checked_person_roles = []
             for person_data in validated_persons:
                 person_role_pair = (
                     person_data["person"].id,
                     person_data["role"].id
-                ) # это что за конструкция? это не массив, получается множетсво set?
+                ) # это что за конструкция? это не массив, получается кортеж, а можно ли список сделать или попроще как-то?
                 if person_role_pair in checked_person_roles: #вот тут тоже плохо поняла как вообще работает эта проверка... если пара находится в списке то выкидываем ошибку, что...
                     raise ValidationError({"personnel": ["Один и тот же человек не должен повторяться в одной и той же роли"]})
                 checked_person_roles.append(person_role_pair)
@@ -134,7 +194,7 @@ class TaskUpdate(MethodView):
             "task": self.task_schema().dump(target_task),
             "persons": TaskPersonSchema(many=True).dump(updated_persons)
         }), 200
-"""
+
 class TaskUpdate(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
