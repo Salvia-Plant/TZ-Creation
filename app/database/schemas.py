@@ -124,7 +124,6 @@ class RoleInfoSchema(SQLAlchemyAutoSchema):
     id = fields.UUID()
     name = fields.Str(required=True)
     code = fields.Str(required=True) #для нас с Катей
-    is_multiple = fields.Boolean()
 
 class StatusSchema(Schema):
     status = fields.Str(required=True)

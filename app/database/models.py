@@ -113,7 +113,6 @@ class RoleInfo(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True)
     name = db.Column(db.String(255), nullable=False, doc='Наименование Роли')
     code = db.Column(db.String(64), nullable=False, unique=True, doc='Код роли') # для нас с катей
-    is_multiple = db.Column(db.Boolean,nullable=False,default=False,doc='Флаг множественной роли')
 
 
 

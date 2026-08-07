@@ -64,7 +64,6 @@ class TaskList(MethodView):
         db.session.commit()
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
 
-
 class TaskUpdate(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
@@ -80,19 +79,19 @@ class TaskUpdate(MethodView):
             return jsonify({"error": "ТЗ не найдено"}), 404
         try:
             val_data = self.update_schema().load(data,unknown=EXCLUDE)
-            if "number" in val_data:
-                target_task.number = val_data["number"]
+            number = val_data["number"]
+            target_task.number = number
             roles = RoleInfo.query.all()
             #сюда складываем уже проверенных людей и их роли, пока ничего в БД не удаляем и не создаём.
             validated_persons = []
             for role in roles:
                 role_code = role.code
-                value_from_request = val_data.get(role_code)
-                if value_from_request is not None:
+                value_from_request = val_data.get(role_code) # вот это надо переименовать, сейчас как будто двойник val_data
+                if value_from_request is not None: # насколько нужна эта проверка? нельзя сразу пеерйти к if role.is_multiple
                     if role.is_multiple:
-                        person_ids = value_from_request
+                        person_ids = value_from_request #тут я запуталась так как по дефолту функция вроде возвращает false?
                     else:
-                        person_ids = [value_from_request]
+                        person_ids = [value_from_request] #а тут получется если не false, а  true, то это массив?
                     for person_id in person_ids:
                         target_person = PersonInfo.query.get(person_id)
                         if not target_person:
@@ -106,25 +105,18 @@ class TaskUpdate(MethodView):
             # Проверяем, что один и тот же человек
             # не указан два раза в одной и той же роли.
             checked_person_roles = []
-
             for person_data in validated_persons:
                 person_role_pair = (
                     person_data["person"].id,
                     person_data["role"].id
-                )
-
-                if person_role_pair in checked_person_roles:
-                    raise ValidationError({
-                        "personnel": [
-                            "Один и тот же человек не должен повторяться в одной и той же роли"
-                        ]
-                    })
-
+                ) # это что за конструкция? это не массив, получается множетсво set?
+                if person_role_pair in checked_person_roles: #вот тут тоже плохо поняла как вообще работает эта проверка... если пара находится в списке то выкидываем ошибку, что...
+                    raise ValidationError({"personnel": ["Один и тот же человек не должен повторяться в одной и той же роли"]})
                 checked_person_roles.append(person_role_pair)
             # PUT передаёт полное новое состояние личного состава.
             # Поэтому удаляем старые связи этого ТЗ с людьми и ролями.
-            self.model2.query.filter_by(task_id=task_id).delete(synchronize_session=False)
-            # Создаём новый актуальный состав личного состава.
+            self.model2.query.filter_by(task_id=task_id).delete(synchronize_session=False) #а вот эту строчку можно сделать по-другому? без synchronize, понятнее
+            # Создаём новый актуальный состав личного состава. - вот отсюда и до конца всё понятно, это было и в прошлом запросе
             for person_data in validated_persons:
                 task_person = self.model2(
                     id=uuid.uuid4(),
