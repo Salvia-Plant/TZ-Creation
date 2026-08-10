@@ -6,7 +6,6 @@ from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
-from app.api.task.roles import ROLES
 from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TaskPerson, RoleInfo
 from app.database.schemas import OrganizationSchema,EquipmentSchema, TaskUpdateSchema, \
  PersonInfoSchema,TechnicalTaskSchema, TaskPersonSchema, StatusSchema,\
@@ -80,14 +79,12 @@ class TaskUpdate(MethodView):
         try:
             val_data = self.update_schema().load(data)
             target_task.number = val_data["number"]
+            roles = RoleInfo.query.all()
             validated_persons = []
-            for role_data in ROLES:
-                role_code = role_data["code"]
+            for role in roles:
+                role_code = role.code
                 selected_persons = val_data.get(role_code)
                 if selected_persons is not None:
-                    role = RoleInfo.query.filter_by(code=role_code).first()
-                    if not role:
-                        raise ValidationError({role_code: [f'Роль с code "{role_code}" не найдена в справочнике ролей']})
                     if role_code == "field_team":
                         person_ids = selected_persons
                     else:
@@ -98,10 +95,12 @@ class TaskUpdate(MethodView):
                             raise ValidationError({role_code: [f'Человек с id {person_id} не найден']})
                         validated_persons.append({
                             "person": target_person,
-                            "role": role
-                        })
+                            "role": role})
+             #по поводу этой проверки - если человек уже заполнял эти поля, то они и будут заполнены, фронт будет отображать их как заполненные
+             # так что если человек вызовет ещё раз ручку на состав, который заполнял, то там просто будут заполненные люди, он добавит номер,
+             # отправит я сделаю реплейс людей на тех же + запишу номер
             if not validated_persons:
-                raise ValidationError({"personnel": ["Личный состав не может быть пустым"]})
+                raise ValidationError({"personnel": ["Личный состав не может быть пустым"]}) 
             old_task_persons = self.model2.query.filter_by(task_id=task_id).all()
             for old_task_person in old_task_persons:
                 db.session.delete(old_task_person)

@@ -100,7 +100,7 @@ class TaskUpdateSchema(Schema):
 """
 
 class TaskUpdateSchema(Schema):
-    number = fields.Str(required=False)
+    number = fields.Str(required=True)
 
     leader = fields.UUID(required=False, allow_none=True)
     special_service_officer = fields.UUID(required=False, allow_none=True)
