@@ -134,7 +134,18 @@ class SingleTask(MethodView):
         if not task or task.deletion_mark:
             return jsonify({"error":"ТЗ не найдено"}), 404
         persons = self.model2.query.filter_by(task_id=task_id).all()
+        
+        response = self.schema().dump(task)
+        response["field_team"] = []
+        for task_person in persons:
+            role_code = task_person.role.code
+            if role_code == "field_team":
+                response["field_team"].append(str(task_person.person_id))
+            else:
+                response[role_code] = str(task_person.person_id)
+        return jsonify(response), 200
 
+"""
         response = {"TechnicalTask": self.schema().dump(task),
                     "field_team": []}
         for task_person in persons:
@@ -144,8 +155,8 @@ class SingleTask(MethodView):
             else:
                 response[role_code] = str(task_person.person_id)
         return jsonify(response), 200
-        #return jsonify({'TechnicalTask': self.schema().dump(task),
-         #               "persons": TaskPersonSchema(many=True).dump(persons)})
+
+"""
 
 """
 class TaskUpdate(MethodView):
