@@ -146,19 +146,6 @@ class SingleTask(MethodView):
         return jsonify(response), 200
 
 """
-        response = {"TechnicalTask": self.schema().dump(task),
-                    "field_team": []}
-        for task_person in persons:
-            role_code = task_person.role.code
-            if role_code == "field_team":
-                response["field_team"].append(str(task_person.person_id))
-            else:
-                response[role_code] = str(task_person.person_id)
-        return jsonify(response), 200
-
-"""
-
-"""
 class TaskUpdate(MethodView):
     model = TechnicalTask
     model2 = TaskPerson

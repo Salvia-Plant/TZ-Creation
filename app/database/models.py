@@ -100,7 +100,7 @@ class TaskPerson(db.Model): #Какой человек в каком ТЗ в к�
     person = db.relationship('PersonInfo', passive_deletes=True, doc='Человек')
 
     role_id = db.Column(UUID(as_uuid=True),db.ForeignKey('role_info.id', 
-                            ondelete='RESTRICT'),doc='id роли')
+                            ondelete='RESTRICT'),nullable=False, doc='id роли')
     role = db.relationship('RoleInfo', passive_deletes = True, doc='роль')
 
 
