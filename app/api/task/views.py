@@ -124,6 +124,7 @@ class TaskUpdate(MethodView):
             "persons": TaskPersonSchema(many=True).dump(updated_persons)
         }), 200
 
+
 class SingleTask(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
