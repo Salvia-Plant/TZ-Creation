@@ -3,6 +3,7 @@ from flask.views import MethodView
 from marshmallow import ValidationError, EXCLUDE
 import uuid
 from sqlalchemy.exc import IntegrityError
+import requests
 
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
@@ -16,7 +17,8 @@ def GetCurrentUserId():
         return 'fed3e0ec-673c-49ab-b73e-8d9934bf0d70'
     else: 
         return None 
-    
+
+
 class TaskList(MethodView):
     model = TechnicalTask
     create_schema = CreateTaskSchema
@@ -63,6 +65,30 @@ class TaskList(MethodView):
         db.session.commit()
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
 
+def get_admitted_persons(target_task):
+
+    equipment = Equipment.query.get(target_task.efo_ref)
+    if not equipment:
+        raise ValidationError({"efo_ref": ["Оборудование для ТЗ не найдено"]})
+    if not equipment.esi_id:
+        raise ValidationError({"esi_id": ["У оборудования не заполнен esi_id"]})
+
+    esi_id = equipment.esi_id
+    try:
+        response = requests.get('http://192.168.74.71:9037/AttestationAPI/passports/suitable_personnel',params={"esi": str(esi_id)})
+    except requests.exceptions.RequestException:
+        raise ValidationError({"Не удалось подключиться к сервису Аттестации"})
+
+    people = response.json()
+
+    return people
+
+
+
+def is_person_admitted(person_id, role_code, admitted_persons):
+    hhh = 
+
+
 class TaskUpdate(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
@@ -79,6 +105,7 @@ class TaskUpdate(MethodView):
         try:
             val_data = self.update_schema().load(data)
             target_task.number = val_data["number"]
+            admitted_persons = get_admitted_persons(target_task)
             roles = RoleInfo.query.all()
             validated_persons = []
             for role in roles:
