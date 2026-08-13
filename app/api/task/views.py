@@ -3,7 +3,7 @@ from flask.views import MethodView
 from marshmallow import ValidationError, EXCLUDE
 import uuid
 from sqlalchemy.exc import IntegrityError
-import requests
+from requests import get, ConnectionError
 
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
@@ -75,18 +75,24 @@ def get_admitted_persons(target_task):
 
     esi_id = equipment.esi_id
     try:
-        response = requests.get('http://192.168.74.71:9037/AttestationAPI/passports/suitable_personnel',params={"esi": str(esi_id)})
-    except requests.exceptions.RequestException:
-        raise ValidationError({"Не удалось подключиться к сервису Аттестации"})
+        response = get('http://192.168.74.71:9037/AttestationAPI/passports/suitable_personnel',params={"esi": str(esi_id)})
+    except ConnectionError:
+        raise ValidationError({"attestation":"Не удалось подключиться к сервису Аттестации"})
 
     people = response.json()
 
     return people
 
+class People(MethodView):
+    model = TechnicalTask
+    def get(self, task_id):
+        target_task = self.model.query.get(task_id)
+        if not target_task or target_task.deletion_mark:
+            return jsonify({"error":"ТЗ не найдено"}), 404
 
-
-def is_person_admitted(person_id, role_code, admitted_persons):
-    hhh = 
+        persons = get_admitted_persons(target_task)
+        
+        return jsonify(persons), 200
 
 
 class TaskUpdate(MethodView):
