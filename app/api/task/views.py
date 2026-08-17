@@ -65,6 +65,7 @@ class TaskList(MethodView):
         db.session.commit()
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
 
+
 def get_admitted_persons(target_task):
 
     equipment = Equipment.query.get(target_task.efo_ref)
@@ -89,10 +90,12 @@ class People(MethodView):
         target_task = self.model.query.get(task_id)
         if not target_task or target_task.deletion_mark:
             return jsonify({"error":"ТЗ не найдено"}), 404
-
+        
+        equipment = Equipment.query.get(target_task.efo_ref)
         persons = get_admitted_persons(target_task)
         
-        return jsonify(persons), 200
+        return jsonify({'persons':persons,
+                        'esi':str(equipment.esi_id)}), 200
 
 
 class TaskUpdate(MethodView):
@@ -131,12 +134,8 @@ class TaskUpdate(MethodView):
                         validated_persons.append({
                             "person": target_person,
                             "role": role})
-             #по поводу этой проверки - если человек уже заполнял эти поля, то они и будут заполнены, фронт будет отображать их как заполненные
-             # так что если человек вызовет ещё раз ручку на состав, который заполнял, то там просто будут заполненные люди, он добавит номер,
-             # отправит я сделаю реплейс людей на тех же + запишу номер
-            if not validated_persons:
-                raise ValidationError({"personnel": ["Личный состав не может быть пустым"]}) 
             old_task_persons = self.model2.query.filter_by(task_id=task_id).all()
+            
             for old_task_person in old_task_persons:
                 db.session.delete(old_task_person)
             for person_data in validated_persons:
