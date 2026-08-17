@@ -150,11 +150,14 @@ class TaskUpdate(MethodView):
         except ValidationError as err:
             db.session.rollback()
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
+        return 'личный состав обновлён'
+    '''
         updated_persons = self.model2.query.filter_by(task_id=task_id).all()
         return jsonify({
             "task": self.task_schema().dump(target_task),
             "persons": TaskPersonSchema(many=True).dump(updated_persons)
         }), 200
+    '''
 
 
 class SingleTask(MethodView):
