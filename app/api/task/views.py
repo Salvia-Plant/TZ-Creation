@@ -66,25 +66,7 @@ class TaskList(MethodView):
         return SuccessResponseSchema().dump(dict(message='Данные ТЗ успешно удалены')), 201
 
 
-def get_admitted_persons(target_task):
-
-    equipment = Equipment.query.get(target_task.efo_ref)
-    if not equipment:
-        raise ValidationError({"efo_ref": ["Оборудование для ТЗ не найдено"]})
-    if not equipment.esi_id:
-        raise ValidationError({"esi_id": ["У оборудования не заполнен esi_id"]})
-
-    esi_id = equipment.esi_id
-    try:
-        response = get('http://192.168.74.71:9037/AttestationAPI/passports/suitable_personnel',params={"esi": str(esi_id)})
-    except ConnectionError:
-        raise ValidationError({"attestation":"Не удалось подключиться к сервису Аттестации"})
-
-    people = response.json()
-
-    return people
-
-class People(MethodView):
+class AdmittedPeople(MethodView):
     model = TechnicalTask
     def get(self, task_id):
         target_task = self.model.query.get(task_id)
@@ -92,9 +74,23 @@ class People(MethodView):
             return jsonify({"error":"ТЗ не найдено"}), 404
         
         equipment = Equipment.query.get(target_task.efo_ref)
-        persons = get_admitted_persons(target_task)
+        organization = Organization.query.get(target_task.organization_ref)
+        if not equipment:
+            raise ValidationError({"efo_ref": "Оборудование для ТЗ не найдено"})
+        if not organization:
+            raise ValidationError({"organization_ref": " организация не найдена у тз"})
+
+        esi_id = equipment.esi_id
+        org = organization.id
+
+        try:
+            response = get('http://192.168.74.71:9037/AttestationAPI/passports/suitable_personnel',params={"esi": str(esi_id),"organization":str(org)})
+        except ConnectionError:
+            raise ValidationError({"attestation":"Не удалось подключиться к сервису Аттестации"})
+
+        people = response.json()
         
-        return jsonify({'persons':persons,
+        return jsonify({'persons':people,
                         'esi':str(equipment.esi_id)}), 200
 
 
@@ -114,7 +110,6 @@ class TaskUpdate(MethodView):
         try:
             val_data = self.update_schema().load(data)
             target_task.number = val_data["number"]
-            admitted_persons = get_admitted_persons(target_task)
             roles = RoleInfo.query.all()
             validated_persons = []
             for role in roles:
