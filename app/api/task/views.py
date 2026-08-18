@@ -34,7 +34,8 @@ class TaskList(MethodView):
             return jsonify({"error": "JSON необходим"}), 400
         try:
             val_data = self.create_schema().load(data,unknown=EXCLUDE)
-            task = self.model.query.filter_by(measurement_id=val_data["measurement_id"]).first()
+            measurement1=val_data["measurement_id"]
+            task = self.model.query.filter_by(measurement_id=measurement1).first()
             if task:
                return "ТЗ с таким measurement_id уже существует", 409
             target_task = self.model(**val_data)
@@ -102,8 +103,6 @@ class TaskUpdate(MethodView):
 
     def put(self, task_id):
         data = request.get_json()
-        if data is None:
-            return jsonify({"error": "JSON необходим"}), 400
         target_task = self.model.query.get(task_id)
         if target_task is None or target_task.deletion_mark:
             return jsonify({"error": "ТЗ не найдено"}), 404
@@ -176,81 +175,6 @@ class SingleTask(MethodView):
                 response[role_code] = str(task_person.person_id)
         return jsonify(response), 200
 
-"""
-class TaskUpdate(MethodView):
-    model = TechnicalTask
-    model2 = TaskPerson
-    update_schema = TaskUpdateSchema
-    task_schema = TechnicalTaskSchema
-
-    def put(self, task_id):
-        data = request.get_json()
-        if data is None:
-            return jsonify({"error": "JSON необходим"}), 400
-        target_task = self.model.query.get(task_id)
-        if target_task is None or target_task.deletion_mark:
-            return jsonify({"error": "ТЗ не найдено"}), 404
-        try:
-            val_data = self.update_schema().load(data,unknown=EXCLUDE)
-            number = val_data["number"]
-            target_task.number = number
-            roles = RoleInfo.query.all()
-            #сюда складываем уже проверенных людей и их роли, пока ничего в БД не удаляем и не создаём.
-            validated_persons = []
-            for role in roles:
-                role_code = role.code
-                value_from_request = val_data.get(role_code) # вот это надо переименовать, сейчас как будто двойник val_data
-                if value_from_request is not None: # насколько нужна эта проверка? нельзя сразу пеерйти к if role.is_multiple
-                    if role.is_multiple:
-                        person_ids = value_from_request #тут я запуталась так как по дефолту функция вроде возвращает false?
-                    else:
-                        person_ids = [value_from_request] #а тут получется если не false, а  true, то это массив?
-                    for person_id in person_ids:
-                        target_person = PersonInfo.query.get(person_id)
-                        if not target_person:
-                            raise ValidationError({role_code: [f'Человек с id {person_id} не найден']})
-                        validated_persons.append({
-                            "person": target_person,
-                            "role": role
-                        })
-            if not validated_persons:
-                raise ValidationError({"personnel": ["Личный состав не может быть пустым"]})
-            checked_person_roles = []
-            for person_data in validated_persons:
-                person_id = person_data["person"].id
-                role_id = person_data["role"].id
-                pair = (person_id, role_id)
-
-                if pair in checked_person_roles:
-                    raise ValidationError({
-                        "personnel": [
-                            "Один и тот же человек не должен повторяться в одной и той же роли"
-                        ]
-                    })
-                checked_person_roles.append(pair)
-            # PUT передаёт полное новое состояние личного состава.
-            # Поэтому удаляем старые связи этого ТЗ с людьми и ролями.
-            self.model2.query.filter_by(task_id=task_id).delete(synchronize_session=False) #а вот эту строчку можно сделать по-другому? без synchronize, понятнее
-            # Создаём новый актуальный состав личного состава. - вот отсюда и до конца всё понятно, это было и в прошлом запросе
-            for person_data in validated_persons:
-                task_person = self.model2(
-                    id=uuid.uuid4(),
-                    task=target_task,
-                    person=person_data["person"],
-                    role=person_data["role"]
-                )
-                db.session.add(task_person)
-            db.session.commit()
-        except ValidationError as err:
-            db.session.rollback()
-            return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
-        updated_persons = self.model2.query.filter_by(task_id=task_id).all()
-        return jsonify({
-            "task": self.task_schema().dump(target_task),
-            "persons": TaskPersonSchema(many=True).dump(updated_persons)
-        }), 200
-
-"""
     
 class Statuses(MethodView):
     """отдельная ручка для получения списка статусов. для фронта"""
