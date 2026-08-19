@@ -36,7 +36,7 @@ class TaskList(MethodView):
             val_data = self.create_schema().load(data,unknown=EXCLUDE)
             measurement1=val_data["measurement_id"]
             task = self.model.query.filter_by(measurement_id=measurement1).first()
-            if task:
+            if task is not None:
                return "ТЗ с таким measurement_id уже существует", 409
             target_task = self.model(**val_data)
             target_task.id = uuid.uuid4()
@@ -175,7 +175,6 @@ class SingleTask(MethodView):
                 response[role_code] = str(task_person.person_id)
         return jsonify(response), 200
 
-    
 class Statuses(MethodView):
     """отдельная ручка для получения списка статусов. для фронта"""
     def get(self):
