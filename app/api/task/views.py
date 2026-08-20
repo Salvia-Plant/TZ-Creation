@@ -120,8 +120,6 @@ class TaskUpdate(MethodView):
                     else:
                         person_ids = [selected_persons]
                     for person_id in person_ids:
-                        #получается с поправкой что мы берём людей из аттестации, именно в этом месте мне надо
-                        #будет вызывать функцию которую я пропишу выше (по получению людей из аттестации)
                         target_person = PersonInfo.query.get(person_id)
                         if not target_person:
                             raise ValidationError({role_code: [f'Человек с id {person_id} не найден']})
