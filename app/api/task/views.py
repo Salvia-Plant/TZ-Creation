@@ -3,7 +3,7 @@ from flask.views import MethodView
 from marshmallow import ValidationError, EXCLUDE
 import uuid
 from sqlalchemy.exc import IntegrityError
-from requests import get, ConnectionError
+from requests import get, post,ConnectionError
 
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
@@ -151,7 +151,6 @@ class TaskUpdate(MethodView):
         }), 200
     '''
 
-
 class SingleTask(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
@@ -193,7 +192,6 @@ class TaskStatus(MethodView):
             task = self.model.query.get(task_id) #локал переменная, в которой орм объект конкрет ТЗ.
             if task is None or task.deletion_mark:
                 return jsonify({"error": "ТЗ не найдено"}), 404 #если нет такого id
-
             new_status = val_data["status"] #берём новое значения статуса из присланных данных
             current_status = task.status #берём текущее значение статуса из таблицы
             values = GetStatusValues() 
@@ -222,4 +220,49 @@ class TaskRegenerate(MethodView):
             return jsonify({"error":"ТЗ не найдено"}), 404
         
         return jsonify({"message": "Перегенерация ТЗ запущена"}), 200
-    
+
+
+def get_template():
+
+    try:
+        response = get('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',params={})
+    except ConnectionError:
+        raise ValidationError({"dafd":"Не удалось подключиться к сервису DAFD"})
+
+    template = response.json()
+
+    return template
+
+class Autogenerate(MethodView):
+    model = TechnicalTask
+    model2 = TaskPerson
+    schema = TechnicalTaskSchema
+
+    def post(self, task_id):
+        task = self.model.query.get(task_id)
+        if not task or task.deletion_mark:
+            return jsonify({"error":"ТЗ не найдено"}), 404
+        persons = self.model2.query.filter_by(task_id=task_id).all()
+        number = task.number
+        template = get_template()
+        filled_template = #вот тут самое главное происходит, заполняю шаблон-json от Елисея своими данными
+        payload = {'name':f'ТЗ номер {number}', 'description':f'сгенерированный документ номер {number}', 'data':filled_template}
+        try:
+            template = get_template()
+            text_fields = template.get("text_fields", {})
+            text_fields["tz_date"] = str(task.creation_date)
+
+            template["text_fields"] = text_fields
+
+            filled_template = template
+            response = post('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',json=payload)
+            result = response.json()
+
+        except ValidationError as err:
+            return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
+
+        except ConnectionError:
+            raise ValidationError({"dafd":"Не удалось подключиться к сервису DAFD"})
+
+        return jsonify(result), 200
+        
