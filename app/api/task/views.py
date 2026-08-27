@@ -77,9 +77,9 @@ class AdmittedPeople(MethodView):
         equipment = Equipment.query.get(target_task.efo_ref)
         organization = Organization.query.get(target_task.organization_ref)
         if not equipment:
-            raise ValidationError({"efo_ref": "Оборудование для ТЗ не найдено"})
+            return jsonify({"efo_ref": "Оборудование для ТЗ не найдено"})
         if not organization:
-            raise ValidationError({"organization_ref": " организация не найдена у тз"})
+            return jsonify({"organization_ref": " организация не найдена у тз"})
 
         esi_id = equipment.esi_id
         org = organization.id
@@ -87,7 +87,7 @@ class AdmittedPeople(MethodView):
         try:
             response = get('http://192.168.74.71:9037/AttestationAPI/passports/suitable_personnel',params={"esi": str(esi_id),"organization":str(org)})
         except ConnectionError:
-            raise ValidationError({"attestation":"Не удалось подключиться к сервису Аттестации"})
+            return jsonify({"error": "Не удалось подключиться к сервису Attestation"}), 503
 
         people = response.json()
         
@@ -227,7 +227,7 @@ def get_template():
     try:
         response = get('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',params={})
     except ConnectionError:
-        raise ValidationError({"dafd":"Не удалось подключиться к сервису DAFD"})
+        return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
 
     template = response.json()
 
@@ -237,16 +237,14 @@ class Autogenerate(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
     schema = TechnicalTaskSchema
-
+ 
     def post(self, task_id):
         task = self.model.query.get(task_id)
         if not task or task.deletion_mark:
             return jsonify({"error":"ТЗ не найдено"}), 404
-        persons = self.model2.query.filter_by(task_id=task_id).all()
         number = task.number
-        template = get_template()
-        filled_template = #вот тут самое главное происходит, заполняю шаблон-json от Елисея своими данными
-        payload = {'name':f'ТЗ номер {number}', 'description':f'сгенерированный документ номер {number}', 'data':filled_template}
+        persons = self.model2.query.filter_by(task_id=task_id).all()
+
         try:
             template = get_template()
             text_fields = template.get("text_fields", {})
@@ -255,14 +253,17 @@ class Autogenerate(MethodView):
             template["text_fields"] = text_fields
 
             filled_template = template
+            payload = {'name':f'ТЗ номер {number}', 'description':f'сгенерированный документ номер {number}', 'data':filled_template}
             response = post('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',json=payload)
             result = response.json()
+            result["id"] = result.pop("doc_ref")
+            result["source"] = "doc"
 
         except ValidationError as err:
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
 
         except ConnectionError:
-            raise ValidationError({"dafd":"Не удалось подключиться к сервису DAFD"})
+             return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
 
         return jsonify(result), 200
         
