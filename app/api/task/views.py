@@ -223,14 +223,11 @@ class TaskRegenerate(MethodView):
 
 
 def get_template():
-
     try:
         response = get('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',params={})
     except ConnectionError:
         return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
-
     template = response.json()
-
     return template
 
 class Autogenerate(MethodView):
