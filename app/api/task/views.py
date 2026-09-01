@@ -237,8 +237,8 @@ class Autogenerate(MethodView):
 
             filled_template = template
             payload = {'name':f'ТЗ номер {number}', 'description':f'сгенерированный документ номер {number}', 'data':filled_template}
-            response = post('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',json=payload)
-            result = response.json()
+            answer = post('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',json=payload)
+            result = answer.json()
             result["id"] = result.pop("doc_ref")
             result["source"] = "doc"
             task.doc_ref = result["id"]
