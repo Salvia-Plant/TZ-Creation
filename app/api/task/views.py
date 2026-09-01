@@ -211,10 +211,6 @@ class TaskStatus(MethodView):
         return jsonify(self.task_schema().dump(task)), 200
 
 
-def get_template():
-
-    return template
-
 class Autogenerate(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
@@ -244,13 +240,12 @@ class Autogenerate(MethodView):
             result = response.json()
             result["id"] = result.pop("doc_ref")
             result["source"] = "doc"
-
+            task.doc_ref = result["id"]
         except ValidationError as err:
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
-
         except ConnectionError:
              return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
-
+        db.session.commit()
         return jsonify(result), 200
 
 class TaskRegenerate(MethodView):
