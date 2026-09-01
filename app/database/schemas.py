@@ -87,17 +87,6 @@ class TaskPersonSchema(SQLAlchemyAutoSchema):
     role_code = fields.Pluck('RoleInfoSchema','code',attribute='role',dump_only=True)
     person_name = fields.Pluck('PersonInfoSchema','full_name',attribute='person',dump_only=True)
 
-"""
-class PersonRoleSchema(Schema):
-    #Выбранный человек и его роль в ТЗ, для входных данных
-    person_id = fields.UUID(required=True)
-    role_id = fields.UUID(required=True)
-
-
-class TaskUpdateSchema(Schema):
-    persons=fields.Nested(PersonRoleSchema, many=True, required=True)
-    number = fields.Str()
-"""
 
 class TaskUpdateSchema(Schema):
     number = fields.Str(required=True)

@@ -230,7 +230,8 @@ class Autogenerate(MethodView):
                 return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
             template = response.json()
             text_fields = template.get("text_fields", {})
-            text_fields["tz_date"] = str(task.creation_date)
+            text_fields["tz_date"] = str(task.creation_date or "")
+            text_fields["N_TZ"] = str(task.number or "")
 
             template["text_fields"] = text_fields
 
