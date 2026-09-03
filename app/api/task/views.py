@@ -233,8 +233,24 @@ class Autogenerate(MethodView):
             text_fields["tz_date"] = str(task.creation_date or "")
             text_fields["N_TZ"] = str(task.number or "")
 
-            template["text_fields"] = text_fields
+            role_to_personnel = {
+                "leader": "personnel.5",
+                "special_service_officer": "personnel.6",
+                "data_preparation_officer": "personnel.7",
+                "support_officer": "personnel.8",
+            }
+            for task_person in persons:
+                role_code = task_person.role.code
 
+                if role_code in role_to_personnel:
+                    personnel = role_to_personnel[role_code]
+                    person = task_person.person
+
+                    text_fields[f"{personnel}.rank"] = str(person.rank or "")
+                    text_fields[f"{personnel}.position"] = str(person.position or "")
+                    text_fields[f"{personnel}.full_name"] = str(person.full_name or "")
+            
+            template["text_fields"] = text_fields
             filled_template = template
             payload = {'name':f'ТЗ номер {number}', 'description':f'сгенерированный документ номер {number}', 'data':filled_template}
             answer = post('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',json=payload)
