@@ -230,8 +230,10 @@ class Autogenerate(MethodView):
                 return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
             template = response.json()
             text_fields = template.get("text_fields", {})
-            text_fields["tz_date"] = str(task.creation_date or "")
+            text_fields["tz_date"] = str(task.creation_date)
             text_fields["N_TZ"] = str(task.number or "")
+            text_fields["signal_date"] = str(task.malfunction_time)
+            text_fields["object.1.v_ch"] = str(task.organization.org_title)
 
             role_to_personnel = {
                 "leader": "personnel.5",
@@ -248,7 +250,7 @@ class Autogenerate(MethodView):
 
                     text_fields[f"{personnel}.rank"] = str(person.rank or "")
                     text_fields[f"{personnel}.position"] = str(person.position or "")
-                    text_fields[f"{personnel}.full_name"] = str(person.full_name or "")
+                    text_fields[f"{personnel}.fio"] = str(person.full_name or "")
             
             template["text_fields"] = text_fields
             filled_template = template
