@@ -251,6 +251,19 @@ class Autogenerate(MethodView):
                     text_fields[f"{personnel}.rank"] = str(person.rank or "")
                     text_fields[f"{personnel}.position"] = str(person.position or "")
                     text_fields[f"{personnel}.fio"] = str(person.full_name or "")
+
+            field_team = []
+            for task_person in persons:
+                if task_person.role.code == "field_team":
+                    field_team.append(task_person.person)
+            rows = template["tables"]["table_personnel"]["rows"]
+            row_number = 2
+            for person in field_team:
+                row = rows[str(row_number)]
+                row["items"][0]["personnel.1.fio"] = str(person.full_name or "")
+                row["items"][0]["personnel.1.rank"] = str(person.rank or "")
+                row["items"][0]["personnel.1.position"] = str(person.position or "")
+                row_number += 1
             
             template["text_fields"] = text_fields
             filled_template = template
