@@ -267,14 +267,4 @@ class Autogenerate(MethodView):
         db.session.commit()
         return jsonify(result), 200
 
-class TaskRegenerate(MethodView):
-    model = TechnicalTask
-#это пока что временная бессмысленная "загушка", не полноценный процесс перегенерации 
-#вероятно надо будет перегенерацию в отдельный модуль выносить
-    def post(self, task_id):
-        task = self.model.query.get(task_id)
-        if task is None:
-            return jsonify({"error":"ТЗ не найдено"}), 404
-        
-        return jsonify({"message": "Перегенерация ТЗ запущена"}), 200
         
