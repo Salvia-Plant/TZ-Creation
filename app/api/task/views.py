@@ -214,7 +214,6 @@ class TaskStatus(MethodView):
 class Autogenerate(MethodView):
     model = TechnicalTask
     model2 = TaskPerson
-    schema = TechnicalTaskSchema
  
     def post(self, task_id):
         task = self.model.query.get(task_id)
@@ -235,22 +234,29 @@ class Autogenerate(MethodView):
             text_fields["signal_date"] = str(task.malfunction_time)
             text_fields["object.1.v_ch"] = str(task.organization.org_title)
 
-            role_to_personnel = {
-                "leader": "personnel.5",
-                "special_service_officer": "personnel.6",
-                "data_preparation_officer": "personnel.7",
-                "support_officer": "personnel.8",
-            }
             for task_person in persons:
                 role_code = task_person.role.code
+                person = task_person.person
 
-                if role_code in role_to_personnel:
-                    personnel = role_to_personnel[role_code]
-                    person = task_person.person
+                if role_code == "leader":
+                    text_fields["personnel.5.rank"] = str(person.rank or "")
+                    text_fields["personnel.5.position"] = str(person.position or "")
+                    text_fields["personnel.5.fio"] = str(person.full_name or "")
 
-                    text_fields[f"{personnel}.rank"] = str(person.rank or "")
-                    text_fields[f"{personnel}.position"] = str(person.position or "")
-                    text_fields[f"{personnel}.fio"] = str(person.full_name or "")
+                elif role_code == "special_service_officer":
+                    text_fields["personnel.6.rank"] = str(person.rank or "")
+                    text_fields["personnel.6.position"] = str(person.position or "")
+                    text_fields["personnel.6.fio"] = str(person.full_name or "")
+
+                elif role_code == "data_preparation_officer":
+                    text_fields["personnel.7.rank"] = str(person.rank or "")
+                    text_fields["personnel.7.position"] = str(person.position or "")
+                    text_fields["personnel.7.fio"] = str(person.full_name or "")
+
+                elif role_code == "support_officer":
+                    text_fields["personnel.8.rank"] = str(person.rank or "")
+                    text_fields["personnel.8.position"] = str(person.position or "")
+                    text_fields["personnel.8.fio"] = str(person.full_name or "")
 
             field_team = []
             for task_person in persons:
