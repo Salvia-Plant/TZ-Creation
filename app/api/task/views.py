@@ -235,29 +235,49 @@ class Autogenerate(MethodView):
             text_fields["object.1.v_ch"] = str(task.organization.org_title)
 
             for task_person in persons:
-                role_code = task_person.role.code
+                role = task_person.role.code
                 person = task_person.person
 
-                if role_code == "leader":
+                if role == "leader":
                     text_fields["personnel.5.rank"] = str(person.rank or "")
                     text_fields["personnel.5.position"] = str(person.position or "")
                     text_fields["personnel.5.fio"] = str(person.full_name or "")
 
-                elif role_code == "special_service_officer":
+                elif role == "special_service_officer":
                     text_fields["personnel.6.rank"] = str(person.rank or "")
                     text_fields["personnel.6.position"] = str(person.position or "")
                     text_fields["personnel.6.fio"] = str(person.full_name or "")
 
-                elif role_code == "data_preparation_officer":
+                elif role == "data_preparation_officer":
                     text_fields["personnel.7.rank"] = str(person.rank or "")
                     text_fields["personnel.7.position"] = str(person.position or "")
                     text_fields["personnel.7.fio"] = str(person.full_name or "")
 
-                elif role_code == "support_officer":
+                elif role == "support_officer":
                     text_fields["personnel.8.rank"] = str(person.rank or "")
                     text_fields["personnel.8.position"] = str(person.position or "")
                     text_fields["personnel.8.fio"] = str(person.full_name or "")
+                    
+            rows = template["tables"]["table_personnel"]["rows"]
+            row_template = rows["2"]
+            row_number = 2
+            for task_person in persons:
+                if task_person.role.code == "field_team":
+                    person = task_person.person
 
+                    if row_number == 2:
+                        row = rows["2"]
+                    else:
+                        row = row_template.copy()
+                        row["items"] = [row_template["items"][0].copy()]
+                        rows[str(row_number)] = row
+
+                    row["items"][0]["personnel.1.fio"] = str(person.full_name or "")
+                    row["items"][0]["personnel.1.rank"] = str(person.rank or "")
+                    row["items"][0]["personnel.1.position"] = str(person.position or "")
+
+                    row_number += 1
+                    """
             field_team = []
             for task_person in persons:
                 if task_person.role.code == "field_team":
@@ -270,7 +290,7 @@ class Autogenerate(MethodView):
                 row["items"][0]["personnel.1.rank"] = str(person.rank or "")
                 row["items"][0]["personnel.1.position"] = str(person.position or "")
                 row_number += 1
-            
+            """
             template["text_fields"] = text_fields
             filled_template = template
             payload = {'name':f'ТЗ номер {number}', 'description':f'сгенерированный документ номер {number}', 'data':filled_template}
