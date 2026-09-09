@@ -5,6 +5,7 @@ import uuid
 from sqlalchemy.exc import IntegrityError
 from requests import get, post,ConnectionError
 
+from app.config import AppConfig
 from app import db
 from app.api.task.statuses import TASK_STATUSES, GetStatusValues,CanChangeStatus
 from app.database.models import TechnicalTask, Organization, Equipment, PersonInfo, TaskPerson, RoleInfo
@@ -12,6 +13,7 @@ from app.database.schemas import OrganizationSchema,EquipmentSchema, TaskUpdateS
  PersonInfoSchema,TechnicalTaskSchema, TaskPersonSchema, StatusSchema,\
     CreateTaskSchema, SuccessResponseSchema, BadIdResponseSchema, UnprocessableEntitySchema\
 
+config = AppConfig()
 def GetCurrentUserId():
     if PersonInfo.query.get('fed3e0ec-673c-49ab-b73e-8d9934bf0d70'):
         return 'fed3e0ec-673c-49ab-b73e-8d9934bf0d70'
@@ -85,7 +87,7 @@ class AdmittedPeople(MethodView):
         org = organization.id
 
         try:
-            response = get('http://192.168.74.71:9037/AttestationAPI/passports/suitable_personnel',params={"esi": str(esi_id),"organization":str(org)})
+            response = get('http://{}/AttestationAPI/passports/suitable_personnel'.format(config.ATTESTATION_URL),params={"esi": str(esi_id),"organization":str(org)})
         except ConnectionError:
             return jsonify({"error": "Не удалось подключиться к сервису Attestation"}), 503
 
@@ -224,7 +226,7 @@ class Autogenerate(MethodView):
 
         try:
             try:
-                response = get('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',params={})
+                response = get('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=config.TEMPLATE_ID),params={})
             except ConnectionError:
                 return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
             template = response.json()
@@ -270,9 +272,8 @@ class Autogenerate(MethodView):
 
             template["tables"]["table_personnel"]["rows"]["2"]["items"] = items
             template["text_fields"] = text_fields
-            filled_template = template
-            payload = {'name':'ТЗ номер {}'.format(number), 'description':'сгенерированный документ номер {}'.format(number), 'data':filled_template}
-            answer = post('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',json=payload)
+            payload = {'name':'ТЗ номер {n}'.format(n=number), 'description':'сгенерированный документ номер {n}'.format(n=number), 'data':template}
+            answer = post('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=config.TEMPLATE_ID),json=payload)
             result = answer.json()
             result["id"] = result.pop("doc_ref")
             result["source"] = "doc"
