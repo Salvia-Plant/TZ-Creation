@@ -258,42 +258,20 @@ class Autogenerate(MethodView):
                     text_fields["personnel.8.position"] = str(person.position or "")
                     text_fields["personnel.8.fio"] = str(person.full_name or "")
                     
-            rows = template["tables"]["table_personnel"]["rows"]
-            row_template = rows["2"]
-            row_number = 2
+            items = []
             for task_person in persons:
                 if task_person.role.code == "field_team":
                     person = task_person.person
+                    items.append({
+                        "personnel.1.fio": str(person.full_name or ""),
+                        "personnel.1.rank": str(person.rank or ""),
+                        "personnel.1.position": str(person.position or "")
+                    })
 
-                    if row_number == 2:
-                        row = rows["2"]
-                    else:
-                        row = row_template.copy()
-                        row["items"] = [row_template["items"][0].copy()]
-                        rows[str(row_number)] = row
-
-                    row["items"][0]["personnel.1.fio"] = str(person.full_name or "")
-                    row["items"][0]["personnel.1.rank"] = str(person.rank or "")
-                    row["items"][0]["personnel.1.position"] = str(person.position or "")
-
-                    row_number += 1
-                    """
-            field_team = []
-            for task_person in persons:
-                if task_person.role.code == "field_team":
-                    field_team.append(task_person.person)
-            rows = template["tables"]["table_personnel"]["rows"]
-            row_number = 2
-            for person in field_team:
-                row = rows[str(row_number)]
-                row["items"][0]["personnel.1.fio"] = str(person.full_name or "")
-                row["items"][0]["personnel.1.rank"] = str(person.rank or "")
-                row["items"][0]["personnel.1.position"] = str(person.position or "")
-                row_number += 1
-            """
+            template["tables"]["table_personnel"]["rows"]["2"]["items"] = items
             template["text_fields"] = text_fields
             filled_template = template
-            payload = {'name':f'ТЗ номер {number}', 'description':f'сгенерированный документ номер {number}', 'data':filled_template}
+            payload = {'name':'ТЗ номер {}'.format(number), 'description':'сгенерированный документ номер {}'.format(number), 'data':filled_template}
             answer = post('http://192.168.74.63:9005/DAFDAPI/templates/asd8hyH9-56gd-87gy-a5dv-56747gdhcn8h/generate_doc',json=payload)
             result = answer.json()
             result["id"] = result.pop("doc_ref")
@@ -302,7 +280,7 @@ class Autogenerate(MethodView):
         except ValidationError as err:
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
         except ConnectionError:
-             return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
+            return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
         db.session.commit()
         return jsonify(result), 200
 
