@@ -277,17 +277,25 @@ class Autogenerate(MethodView):
                     b=task.efo.from_designation or "",
                     c=task.efo.factory_number or ""
                 )
-            payload = {'name':'ТЗ номер {n}'.format(n=number), 'description':'сгенерированный документ номер {n}'.format(n=number), 'data':template}
-            answer = post('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=config.TEMPLATE_ID),json=payload)
-            result = answer.json()
-            result["id"] = result.pop("doc_ref")
-            result["source"] = "doc"
-            task.doc_ref = result["id"]
+            if task.doc_ref is None:
+                payload = {'name':'ТЗ номер {n}'.format(n=number), 'description':'сгенерированный документ номер {n}'.format(n=number), 'data':template}
+                answer = post('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=config.TEMPLATE_ID),json=payload)
+                result = answer.json()
+                result["id"] = result.pop("doc_ref")
+                result["source"] = "doc"
+                task.doc_ref = result["id"]
+            else:
+                doc_ref = task.doc_ref
+                payload2 = {'description':'новая версия документа номер {n}'.format(n=number), 'data':template}
+                resource = post('http://{address}/DAFDAPI/docs/{d}/version'.format(address=config.DAFD_ADDRESS,d=doc_ref),json=payload)
+                result2 = resource.json()
+                print(result2)
+
         except ValidationError as err:
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
         except ConnectionError:
             return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
         db.session.commit()
-        return jsonify(result), 200
+        return jsonify({"id":str(task.doc_ref),"source":"doc"}), 201
 
         
