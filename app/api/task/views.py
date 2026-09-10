@@ -235,6 +235,7 @@ class Autogenerate(MethodView):
             text_fields["N_TZ"] = str(task.number or "")
             text_fields["signal_date"] = str(task.malfunction_time)
             text_fields["object.1.v_ch"] = str(task.organization.org_title)
+            text_fields["malf_place"] = str(task.efo.equipment_name)
 
             for task_person in persons:
                 role = task_person.role.code
@@ -269,9 +270,13 @@ class Autogenerate(MethodView):
                         "personnel.1.rank": str(person.rank or ""),
                         "personnel.1.position": str(person.position or "")
                     })
-
             template["tables"]["table_personnel"]["rows"]["2"]["items"] = items
             template["text_fields"] = text_fields
+            template["tables"]["table_malf_data"]["rows"]["3"]["items"][0]["device.1.id"] = "{a} ({b}), {c}".format(
+                    a=task.efo.equipment_name or "",
+                    b=task.efo.from_designation or "",
+                    c=task.efo.factory_number or ""
+                )
             payload = {'name':'ТЗ номер {n}'.format(n=number), 'description':'сгенерированный документ номер {n}'.format(n=number), 'data':template}
             answer = post('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=config.TEMPLATE_ID),json=payload)
             result = answer.json()
