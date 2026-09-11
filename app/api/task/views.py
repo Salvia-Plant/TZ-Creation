@@ -273,23 +273,24 @@ class Autogenerate(MethodView):
             template["tables"]["table_personnel"]["rows"]["2"]["items"] = items
             template["text_fields"] = text_fields
             template["tables"]["table_malf_data"]["rows"]["3"]["items"][0]["device.1.id"] = "{a} ({b}), {c}".format(
-                    a=task.efo.equipment_name or "",
-                    b=task.efo.from_designation or "",
+                    a=task.efo.form_designation or "",
+                    b=task.efo.equipment_name or "",
                     c=task.efo.factory_number or ""
                 )
+            
             if task.doc_ref is None:
                 payload = {'name':'ТЗ номер {n}'.format(n=number), 'description':'сгенерированный документ номер {n}'.format(n=number), 'data':template}
                 answer = post('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=config.TEMPLATE_ID),json=payload)
                 result = answer.json()
-                result["id"] = result.pop("doc_ref")
-                result["source"] = "doc"
-                task.doc_ref = result["id"]
+                task.doc_ref = result.pop("doc_ref")
+                print("doc_ref:", task.doc_ref)
+
             else:
                 doc_ref = task.doc_ref
-                payload2 = {'description':'новая версия документа номер {n}'.format(n=number), 'data':template}
-                resource = post('http://{address}/DAFDAPI/docs/{d}/version'.format(address=config.DAFD_ADDRESS,d=doc_ref),json=payload)
-                result2 = resource.json()
-                print(result2)
+                payload = {'description':'новая версия документа номер {n}'.format(n=number), 'data':template}
+                answer = post('http://{address}/DAFDAPI/docs/{ref}/versions'.format(address=config.DAFD_ADDRESS,ref=doc_ref),json=payload)
+                print(task.doc_ref)
+                print(answer.status_code)
 
         except ValidationError as err:
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
@@ -297,5 +298,3 @@ class Autogenerate(MethodView):
             return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
         db.session.commit()
         return jsonify({"id":str(task.doc_ref),"source":"doc"}), 201
-
-        
