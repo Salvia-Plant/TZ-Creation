@@ -44,4 +44,11 @@ def version():
     except (FileNotFoundError, OSError):
        return jsonify({'version':'не определена',
                        'commit_hash':'не определена'})
-    
+
+@app.route('/TZAPI/add_roles', methods=['POST'])
+def add_roles():
+    from app.database.seed import roles
+
+    roles()
+
+    return jsonify({"message": "Роли добавлены"}), 200
