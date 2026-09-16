@@ -279,7 +279,7 @@ class Autogenerate(MethodView):
                 )
             
             if task.doc_ref is None:
-                payload = {'name':'ТЗ номер {n}'.format(n=number), 'description':'сгенерированный документ номер {n}'.format(n=number), 'data':template}
+                payload = {'name':'ТЗ номер {n}'.format(n=number or ""), 'description':'сгенерированный документ номер {n}'.format(n=number or ""), 'data':template}
                 answer = post('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=config.TEMPLATE_ID),json=payload)
                 result = answer.json()
                 task.doc_ref = result.pop("doc_ref")
@@ -287,7 +287,7 @@ class Autogenerate(MethodView):
 
             else:
                 doc_ref = task.doc_ref
-                payload = {'description':'новая версия документа номер {n}'.format(n=number), 'data':template}
+                payload = {'description':'новая версия документа номер {n}'.format(n=number or ""), 'data':template}
                 answer = post('http://{address}/DAFDAPI/docs/{ref}/versions'.format(address=config.DAFD_ADDRESS,ref=doc_ref),json=payload)
                 print(task.doc_ref)
                 print(answer.status_code)
