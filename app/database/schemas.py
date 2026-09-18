@@ -22,7 +22,7 @@ class EquipmentSchema(SQLAlchemyAutoSchema):
     id = fields.UUID(required=True)
     equipment_name = fields.Str(required=True)
     esi_id = fields.UUID(required=True)
-    from_designation = fields.Str(dump_only=True)
+    form_designation = fields.Str(dump_only=True)
     factory_number = fields.Str(dump_only=True)
 
     children = fields.Nested('EquipmentSchema', many=True, dump_only=False)

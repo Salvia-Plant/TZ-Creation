@@ -44,7 +44,7 @@ class EfoFromParserSchema(SQLAlchemyAutoSchema):
     id = fields.UUID(required=True, data_key='Ref',load_only=True)
     parent_id = fields.UUID(required=False,data_key='Parent',allow_none=True,load_only=True)
     equipment_name = fields.Str(required=True, data_key='Description',load_only=True)
-    designation = fields.Str(required=False,data_key='OboznachenieFormulyara',allow_none=True,load_only=True)
+    form_designation = fields.Str(required=False,data_key='OboznachenieFormulyara',allow_none=True,load_only=True)
     factory_number = fields.Str(required=False,data_key='ZavodskoyNomerIzdeliyal',allow_none=True,load_only=True)
     esi_id = fields.UUID(required=False,data_key='ZavodskoyNomerIsdeliya',allow_none=True,load_only=True )
    
