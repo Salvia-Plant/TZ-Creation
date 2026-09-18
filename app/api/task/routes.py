@@ -1,5 +1,6 @@
 from . import task
-from .views import TaskList, SingleTask, TaskStatus, TaskRegenerate, Statuses,TaskUpdate, AdmittedPeople
+from .views import TaskList, SingleTask, TaskStatus, TaskRegenerate, Statuses,TaskUpdate, AdmittedPeople,\
+Autogenerate
 
 #для каждого вью класса регистрируем url
 task.add_url_rule('/task_list', view_func=TaskList.as_view('task_list'))
