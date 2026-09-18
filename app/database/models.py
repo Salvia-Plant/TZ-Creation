@@ -61,7 +61,7 @@ class Equipment(db.Model):
     parent_id = db.Column(UUID(as_uuid=True), doc='id родителя')
     equipment_name = db.Column(db.String(255), nullable=False, doc="Наименование оборудования")
     #technical_tasks = db.relationship("TechnicalTask", back_populates="equipment",passive_deletes=True)
-    from_designation = db.Column(db.String(255), doc='обозначение формуляра')
+    form_designation = db.Column(db.String(255), doc='обозначение формуляра')
     factory_number = db.Column(db.String(255), default=-1, doc = 'Заводской № продукта')
     esi_id = db.Column(UUID(as_uuid=True), doc='Ссылка на объект из ЭСИ')
 

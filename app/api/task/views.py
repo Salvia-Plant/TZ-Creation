@@ -87,7 +87,7 @@ class AdmittedPeople(MethodView):
         org = organization.id
 
         try:
-            response = get('http://{}/AttestationAPI/passports/suitable_personnel'.format(config.ATTESTATION_URL),params={"esi": str(esi_id),"organization":str(org)})
+            response = get('http://{address}/AttestationAPI/passports/suitable_personnel'.format(address=config.ATTESTATION_ADDRESS),params={"esi": str(esi_id),"organization":str(org)})
         except ConnectionError:
             return jsonify({"error": "Не удалось подключиться к сервису Attestation"}), 503
 
@@ -124,7 +124,7 @@ class TaskUpdate(MethodView):
                     for person_id in person_ids:
                         target_person = PersonInfo.query.get(person_id)
                         if not target_person:
-                            raise ValidationError({role_code: [f'Человек с id {person_id} не найден']})
+                            raise ValidationError({role_code: 'Человек с id {id} не найден'}.format(id=person_id))
                         validated_persons.append({
                             "person": target_person,
                             "role": role})
@@ -145,13 +145,6 @@ class TaskUpdate(MethodView):
             db.session.rollback()
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
         return 'личный состав обновлён'
-    '''
-        updated_persons = self.model2.query.filter_by(task_id=task_id).all()
-        return jsonify({
-            "task": self.task_schema().dump(target_task),
-            "persons": TaskPersonSchema(many=True).dump(updated_persons)
-        }), 200
-    '''
 
 class SingleTask(MethodView):
     model = TechnicalTask
