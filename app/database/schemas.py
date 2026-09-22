@@ -90,7 +90,8 @@ class TaskPersonSchema(SQLAlchemyAutoSchema):
 
 
 class TaskUpdateSchema(Schema):
-    number = fields.Str(required=True)
+    number = fields.Str(required=False)
+    tz_date = fields.Date(required=False)
 
     leader = fields.UUID(required=False, allow_none=True)
     special_service_officer = fields.UUID(required=False, allow_none=True)
