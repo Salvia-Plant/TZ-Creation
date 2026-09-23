@@ -110,7 +110,11 @@ class TaskUpdate(MethodView):
             return jsonify({"error": "ТЗ не найдено"}), 404
         try:
             val_data = self.update_schema().load(data)
-            target_task.number = val_data["number"]
+            val_data = self.update_schema().load(data)
+            if "number" in val_data:
+                target_task.number = val_data["number"]
+            if "tz_date" in val_data:
+                target_task.tz_date = val_data["tz_date"]
             roles = RoleInfo.query.all()
             validated_persons = []
             for role in roles:
@@ -224,7 +228,7 @@ class Autogenerate(MethodView):
                 return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
             template = response.json()
             text_fields = template.get("text_fields", {})
-            text_fields["tz_date"] = str(task.creation_date)
+            text_fields["tz_date"] = str(task.tz_date or "")
             text_fields["N_TZ"] = str(task.number or "")
             text_fields["signal_date"] = str(task.malfunction_time)
             text_fields["object.1.v_ch"] = str(task.organization.org_title)

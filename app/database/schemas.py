@@ -68,6 +68,7 @@ class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа
     malfunction_time = fields.DateTime(format='%d.%m.%YT%H:%M:%S',required=False, allow_none=True)
     measurement_id = fields.Int(required=False, allow_none=True)
     creation_date = fields.Date(dump_only=True)
+    tz_date = fields.Date(dump_only=True)
     number = fields.Str(dump_only=True)
     status = fields.Str(dump_only=True)
     is_active = fields.Boolean(dump_only=True)
