@@ -104,9 +104,8 @@ class TaskUpdateSchema(Schema):
 class CreateTaskSchema(Schema):
     malfunction_time = fields.DateTime(required=True)
     measurement_id = fields.Int(required=True)
-    organization_ref = fields.UUID(required=True)
     efo_ref = fields.UUID(required=True)
-    combat_impact = fields.Boolean(required=False, allow_none=True)
+    combat_impact = fields.Boolean(required=True)
 
 class RoleInfoSchema(SQLAlchemyAutoSchema): 
     """Справочник ролей ЛС для ТЗ"""

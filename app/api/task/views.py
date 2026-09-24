@@ -40,21 +40,30 @@ class TaskList(MethodView):
             task = self.model.query.filter_by(measurement_id=measurement1).first()
             if task is not None:
                return "ТЗ с таким measurement_id уже существует", 409
-            target_task = self.model(**val_data)
-            target_task.id = uuid.uuid4()
-            target_task.status = "INITIALIZED"
-            target_task.is_active = True
-            target_task.deletion_mark = False
-            target_task.creating_author_id = None
+            try:
+                response = get('http://{address}/EFOAPI/Catefo_EFO'.format(address=config.EFO_ADDRESS),params={"Ref": val_data["efo_ref"]})
+            except ConnectionError:
+                return jsonify({"error": "Не удалось подключиться к сервису efo-back"}), 503
+            result = response.json()
+            organization_from_efo = result["EkspluatirujushajaOrganizatsija"]
 
+            target_task = self.model(
+                    id=uuid.uuid4(),
+                    efo_ref=val_data["efo_ref"],
+                    measurement_id=val_data["measurement_id"],
+                    combat_impact=val_data["combat_impact"],
+                    malfunction_time=val_data["malfunction_time"],
+                    organization_ref = organization_from_efo,
+                    status = "INITIALIZED",
+                    is_active = True,
+                    deletion_mark = False,
+                    creating_author_id = None
+                )
             db.session.add(target_task)
             db.session.commit()
         except ValidationError as err:
             db.session.rollback()
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
-        #except IntegrityError:
-        #    db.session.rollback()
-        #    return jsonify({"error": "Уже существует ТЗ по данной неисправности"}), 409
         return jsonify(self.task_schema().dump(target_task)), 201
     
     def delete(self): 
