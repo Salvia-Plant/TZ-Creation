@@ -45,7 +45,7 @@ class TaskList(MethodView):
             except ConnectionError:
                 return jsonify({"error": "Не удалось подключиться к сервису efo-back"}), 503
             result = response.json()
-            organization_from_efo = result["EkspluatirujushajaOrganizatsija"]
+            organization_from_efo = result[0]["EkspluatirujushajaOrganizatsija"]
 
             target_task = self.model(
                     id=uuid.uuid4(),
@@ -158,6 +158,7 @@ class TaskUpdate(MethodView):
             db.session.rollback()
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
         return 'личный состав обновлён'
+
 
 class SingleTask(MethodView):
     model = TechnicalTask
