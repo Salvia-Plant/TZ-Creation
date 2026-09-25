@@ -46,6 +46,9 @@ class TaskList(MethodView):
                 return jsonify({"error": "Не удалось подключиться к сервису efo-back"}), 503
             result = response.json()
             organization_from_efo = result[0]["EkspluatirujushajaOrganizatsija"]
+            organization = Organization.query.get(organization_from_efo)
+            if organization is None:
+                return 'Невозможно создать ТЗ, не найдена эксплуатирующая организация', 422
 
             target_task = self.model(
                     id=uuid.uuid4(),
@@ -119,17 +122,18 @@ class TaskUpdate(MethodView):
             return jsonify({"error": "ТЗ не найдено"}), 404
         try:
             val_data = self.update_schema().load(data)
-            val_data = self.update_schema().load(data)
             if "number" in val_data:
                 target_task.number = val_data["number"]
             if "tz_date" in val_data:
                 target_task.tz_date = val_data["tz_date"]
             roles = RoleInfo.query.all()
+            update_persons = False
             validated_persons = []
             for role in roles:
                 role_code = role.code
                 selected_persons = val_data.get(role_code)
                 if selected_persons is not None:
+                    update_persons = True
                     if role_code == "field_team":
                         person_ids = selected_persons
                     else:
@@ -137,27 +141,27 @@ class TaskUpdate(MethodView):
                     for person_id in person_ids:
                         target_person = PersonInfo.query.get(person_id)
                         if not target_person:
-                            raise ValidationError({role_code: 'Человек с id {id} не найден'}.format(id=person_id))
+                            raise ValidationError({role_code: 'Человек с id {id} не найден'.format(id=person_id)})
                         validated_persons.append({
                             "person": target_person,
                             "role": role})
-            old_task_persons = self.model2.query.filter_by(task_id=task_id).all()
-            
-            for old_task_person in old_task_persons:
-                db.session.delete(old_task_person)
-            for person_data in validated_persons:
-                task_person = self.model2(
-                    id=uuid.uuid4(),
-                    task=target_task,
-                    person=person_data["person"],
-                    role=person_data["role"]
-                )
-                db.session.add(task_person)
+            if update_persons is True:
+                old_task_persons = self.model2.query.filter_by(task_id=task_id).all()
+                for old_task_person in old_task_persons:
+                    db.session.delete(old_task_person)
+                for person_data in validated_persons:
+                    task_person = self.model2(
+                        id=uuid.uuid4(),
+                        task=target_task,
+                        person=person_data["person"],
+                        role=person_data["role"]
+                    )
+                    db.session.add(task_person)
             db.session.commit()
         except ValidationError as err:
             db.session.rollback()
             return UnprocessableEntitySchema().dump(dict(messages=err.messages)), 422
-        return 'личный состав обновлён'
+        return 'информация о техническом задании обновлена', 200
 
 
 class SingleTask(MethodView):
