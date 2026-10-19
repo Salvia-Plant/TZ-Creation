@@ -102,7 +102,7 @@ class TaskUpdateSchema(Schema):
     field_team = fields.List(fields.UUID(),required=False)
     
 class CreateTaskSchema(Schema):
-    malfunction_time = fields.DateTime(required=True)
+    malfunction_time = fields.DateTime(required=True) # ssssss
     measurement_id = fields.Int(required=True)
     efo_ref = fields.UUID(required=True)
     combat_impact = fields.Boolean(required=True)
