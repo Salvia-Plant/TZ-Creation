@@ -49,8 +49,8 @@ class PersonInfoSchema(SQLAlchemyAutoSchema):
     position = fields.Str(required=False, allow_none=True)
     rank = fields.Str(required=False, allow_none=True)
     full_name = fields.Str(required=False, allow_none=True)
-
-class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа 
+# kkkkkkk
+class TechnicalTaskSchema(SQLAlchemyAutoSchema): #для дампа ввв
     class Meta:
         model = TechnicalTask
         exclude = ('creating_author', 'deleting_author')
