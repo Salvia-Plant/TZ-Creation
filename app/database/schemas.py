@@ -98,7 +98,7 @@ class TaskUpdateSchema(Schema):
     special_service_officer = fields.UUID(required=False, allow_none=True)
     data_preparation_officer = fields.UUID(required=False, allow_none=True)
     support_officer = fields.UUID(required=False, allow_none=True)
-
+    
     field_team = fields.List(fields.UUID(),required=False)
     
 class CreateTaskSchema(Schema):
