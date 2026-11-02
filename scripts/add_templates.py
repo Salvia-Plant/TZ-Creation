@@ -1,10 +1,8 @@
+import requests
 import os
 import sys
-import requests
 
-# корень проекта, чтобы импортировать app
-PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, PATH)
+sys.path.insert(0, os.path.dirname(os.getcwd())) #корень проекта чтобы импортировтаь app
 
 from app.config import AppConfig
 
@@ -15,19 +13,20 @@ TEMPLATE_NAME = "ТЗ на устранение неисправности"
 
 def add_template():
 
-    templates_path = os.path.join(PATH, "templates")
-    template_path = os.path.join(templates_path,TEMPLATE_IDENTIFIER + ".odt")
+    path_templates = os.path.dirname(os.getcwd())
+    path_templates = os.path.join(path_templates, 'templates')
+
+    template_path = os.path.join(path_templates,TEMPLATE_IDENTIFIER + '.odt')
     try:
         with open(template_path, "rb") as file:
-            response = requests.post("http://{address}/DAFDAPI/templates".format(address=config.DAFD_ADDRESS),
+            req = requests.post("http://{address}/DAFDAPI/templates".format(address=config.DAFD_ADDRESS),
                 data={"name": TEMPLATE_NAME},files={"file": file})
-        if response.ok:
-            print("Шаблон успешно загружен в ДАФД")
-        elif response.text == "Повторяющееся имя шаблона":
-            print("Шаблон уже существует в ДАФД")
+        if req.ok and req.text:
+            pass
         else:
-            print(response.text)
-            raise Exception("Ошибка при загрузке шаблона")
+            if req.text!= 'Повторяющееся имя шаблона':
+                print(req.text)
+                raise Exception("Ошибка при загрузке шаблона")
 
         #получаем ref загруженного шаблона
         answer = requests.get("http://{address}/DAFDAPI/templates/search/{identifier}".format(
