@@ -237,7 +237,15 @@ class Autogenerate(MethodView):
 
         try:
             try:
-                response = get('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=config.TEMPLATE_ID),params={})
+                answer = get("http://{address}/DAFDAPI/templates/search/{identifier}".format(
+                                address=config.DAFD_ADDRESS,
+                                identifier=config.TEMPLATE_IDENTIFIER))
+            except ConnectionError:
+                return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
+            template_ref = answer.json().get("ref")
+            try:
+                response = get('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(
+                    address=config.DAFD_ADDRESS,template=template_ref),params={})
             except ConnectionError:
                 return jsonify({"error": "Не удалось подключиться к сервису DAFD"}), 503
             template = response.json()
@@ -291,7 +299,7 @@ class Autogenerate(MethodView):
             
             if task.doc_ref is None:
                 payload = {'name':'ТЗ номер {n}'.format(n=number or ""), 'description':'сгенерированный документ номер {n}'.format(n=number or ""), 'data':template}
-                answer = post('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=config.TEMPLATE_ID),json=payload)
+                answer = post('http://{address}/DAFDAPI/templates/{template}/generate_doc'.format(address=config.DAFD_ADDRESS,template=template_ref),json=payload)
                 result = answer.json()
                 task.doc_ref = result.pop("doc_ref")
                 print("doc_ref:", task.doc_ref)
