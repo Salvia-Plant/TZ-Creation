@@ -108,6 +108,32 @@ class AdmittedPeople(MethodView):
         return jsonify({'persons':people,
                         'esi':str(equipment.esi_id)}), 200
 
+class AvailblePlans(MethodView):
+    model = TechnicalTask
+    def get(self, task_id):
+        target_task = self.model.query.get(task_id)
+        if not target_task or target_task.deletion_mark:
+            return jsonify({"error":"ТЗ не найдено"}), 404
+        
+        equipment = Equipment.query.get(target_task.efo_ref)
+        organization = Organization.query.get(target_task.organization_ref)
+        if not equipment:
+            return jsonify({"efo_ref": "Оборудование для ТЗ не найдено"})
+        if not organization:
+            return jsonify({"organization_ref": " организация не найдена у тз"})
+
+        esi_id = equipment.esi_id
+        org = organization.id
+
+        try:
+            response = get('http://{address}/AttestationAPI/passports/suitable_personnel'.format(address=config.PLANS_ADDRESS),params={"esi": str(esi_id),"organization":str(org)})
+        except ConnectionError:
+            return jsonify({"error": "Не удалось подключиться к сервису pkr-back"}), 503
+
+        plans = response.json()
+        return jsonify({'persons':plans,
+                        'esi':str(equipment.esi_id)}), 200
+
 
 class TaskUpdate(MethodView):
     model = TechnicalTask
