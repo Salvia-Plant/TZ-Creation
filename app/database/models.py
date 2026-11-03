@@ -22,6 +22,7 @@ class TechnicalTask(db.Model):
                 foreign_keys='TechnicalTask.deleting_author_id',passive_deletes=True, doc='Удаливший запись')
     organization_ref = db.Column(UUID(as_uuid=True),db.ForeignKey('organization.id', ondelete='CASCADE'), doc='id организации') #из мониторинга
     organization = db.relationship('Organization', passive_deletes=True)
+    plan_ref = db.Column(UUID(as_uuid=True), doc='id плана для данного ТЗ')
 
     efo_ref = db.Column(UUID(as_uuid=True),db.ForeignKey('equipment.id', ondelete='CASCADE'), doc='id ЭФО')#из мониторинга
     efo = db.relationship('Equipment', passive_deletes=True)
@@ -115,6 +116,7 @@ class RoleInfo(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True)
     name = db.Column(db.String(255), nullable=False, doc='Наименование Роли')
     code = db.Column(db.String(64), nullable=False, unique=True, doc='Код роли') 
+
 
 
 
